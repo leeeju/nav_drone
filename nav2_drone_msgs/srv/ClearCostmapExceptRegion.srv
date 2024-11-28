@@ -1,0 +1,8 @@
+# Request
+geometry_msgs/Point min_point      # Minimum corner of the region to keep
+geometry_msgs/Point max_point      # Maximum corner of the region to keep
+
+---
+# Response
+bool success                       # True if clearing succeeded
+string message                     # Optional error or success message

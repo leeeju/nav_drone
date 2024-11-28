@@ -1,0 +1,7 @@
+# Request
+bool confirm                       # Confirmation flag to proceed with clearing
+
+---
+# Response
+bool success                       # True if clearing succeeded
+string message                     # Optional error or success message

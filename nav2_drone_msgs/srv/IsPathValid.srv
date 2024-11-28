@@ -1,0 +1,7 @@
+# Request
+nav_msgs/Path path                 # The path to validate
+
+---
+# Response
+bool is_valid                      # True if the path is valid
+string message                     # Optional error or invalidation reason

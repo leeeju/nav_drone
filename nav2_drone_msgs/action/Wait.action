@@ -1,0 +1,11 @@
+# Goal
+float32 duration                   # Time to wait (in seconds)
+
+---
+# Result
+bool success                       # Whether the wait was completed successfully
+string message                     # Optional message for debugging or failure
+
+---
+# Feedback
+float32 remaining_time             # Remaining time to complete the wait

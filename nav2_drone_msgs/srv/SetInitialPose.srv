@@ -1,0 +1,7 @@
+# Request
+geometry_msgs/PoseWithCovarianceStamped initial_pose  # Initial pose of the robot
+
+---
+# Response
+bool success                       # True if setting initial pose succeeded
+string message                     # Optional error or success message

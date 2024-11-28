@@ -1,0 +1,13 @@
+# Goal
+nav_msgs/Path path              # Sequence of waypoints for the drone to follow
+float32 speed                   # Desired speed for navigation
+
+---
+# Result
+bool success                    # Whether the path was followed successfully
+string message                  # Optional message for debugging or failure
+
+---
+# Feedback
+float32 percentage_complete     # Percentage of the path completed
+geometry_msgs/PoseStamped current_pose  # Current pose of the drone

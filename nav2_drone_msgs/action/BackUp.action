@@ -1,0 +1,13 @@
+# Goal
+float32 distance                       # Distance to move backward
+float32 speed                          # Speed of the movement
+float32 yaw_offset                     # Optional: Rotate while moving backward
+
+---
+# Result
+bool success                           # Whether the movement succeeded
+string message                         # Optional message for debugging or failure
+
+---
+# Feedback
+geometry_msgs/PoseStamped current_pose # Current pose of the drone

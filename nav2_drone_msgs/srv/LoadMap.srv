@@ -1,0 +1,7 @@
+# Request
+string map_filename                # Filename of the map to load
+
+---
+# Response
+bool success                       # True if loading succeeded
+string message                     # Optional error or success message

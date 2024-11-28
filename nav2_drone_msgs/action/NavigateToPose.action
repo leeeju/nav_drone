@@ -1,0 +1,13 @@
+# Goal
+geometry_msgs/PoseStamped pose  # Target position and orientation in 3D space
+float32 speed                   # Desired speed for navigation
+
+---
+# Result
+bool success                    # Whether the navigation succeeded
+string message                  # Optional message for debugging or failure
+
+---
+# Feedback
+float32 percentage_complete     # Percentage of the path completed
+geometry_msgs/PoseStamped current_pose  # Current pose of the drone

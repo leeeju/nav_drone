@@ -1,0 +1,13 @@
+# Goal
+geometry_msgs/PoseStamped[] waypoints  # Array of waypoints to include in the path
+bool consider_altitude                 # Whether to consider altitude in planning
+
+---
+# Result
+bool success                           # Whether the path planning succeeded
+nav_msgs/Path path                     # Planned path connecting all waypoints
+string message                         # Optional message for debugging or failure
+
+---
+# Feedback
+float32 progress                       # Progress of the path computation (0.0 to 1.0)

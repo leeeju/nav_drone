@@ -1,0 +1,8 @@
+# Request
+bool include_metadata              # Whether to include metadata in the response
+
+---
+# Response
+nav2_drone_msgs/Costmap costmap    # The costmap data
+bool success                       # True if retrieval succeeded
+string message                     # Optional error or success message

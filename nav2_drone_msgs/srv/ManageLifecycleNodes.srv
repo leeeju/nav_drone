@@ -1,0 +1,8 @@
+# Request
+string node_name                   # Name of the lifecycle node
+string command                     # Command to execute (e.g., "start", "stop", "configure")
+
+---
+# Response
+bool success                       # True if the command succeeded
+string message                     # Optional error or success message

@@ -1,0 +1,12 @@
+# Goal
+geometry_msgs/PoseStamped docking_station_pose  # Pose of the docking station
+
+---
+# Result
+bool success                                   # Whether docking succeeded
+string message                                # Optional message for debugging or failure
+
+---
+# Feedback
+float32 percentage_complete                   # Percentage of the docking operation completed
+geometry_msgs/PoseStamped current_pose        # Current pose of the drone

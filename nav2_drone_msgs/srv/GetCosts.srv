@@ -1,0 +1,8 @@
+# Request
+geometry_msgs/Point[] points       # Array of points to query costs for
+
+---
+# Response
+float32[] costs                    # Array of costs corresponding to the points
+bool success                       # True if retrieval succeeded
+string message                     # Optional error or success message

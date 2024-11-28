@@ -1,0 +1,13 @@
+# Goal
+float32 angle                          # Angle to spin (in radians)
+float32 speed                          # Rotational speed
+
+---
+# Result
+bool success                           # Whether the spin succeeded
+string message                         # Optional message for debugging or failure
+
+---
+# Feedback
+float32 remaining_angle                # Remaining angle to complete the spin
+geometry_msgs/PoseStamped current_pose # Current pose of the drone

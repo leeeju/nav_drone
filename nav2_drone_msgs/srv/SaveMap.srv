@@ -1,0 +1,7 @@
+# Request
+string map_filename                # Filename to save the map to
+
+---
+# Response
+bool success                       # True if saving succeeded
+string message                     # Optional error or success message

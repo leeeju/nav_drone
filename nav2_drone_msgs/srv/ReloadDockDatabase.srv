@@ -1,0 +1,7 @@
+# Request
+bool force_reload                  # Whether to force reload the database
+
+---
+# Response
+bool success                       # True if reloading succeeded
+string message                     # Optional error or success message

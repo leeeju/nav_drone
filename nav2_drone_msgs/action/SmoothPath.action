@@ -1,0 +1,13 @@
+# Goal
+nav_msgs/Path path                 # Initial path to be smoothed
+float32 smoothing_factor           # Factor controlling the level of smoothing (0 to 1)
+
+---
+# Result
+bool success                       # Whether the path smoothing succeeded
+nav_msgs/Path smoothed_path        # Smoothed path
+string message                     # Optional message for debugging or failure
+
+---
+# Feedback
+float32 progress                   # Progress of the smoothing operation (0.0 to 1.0)

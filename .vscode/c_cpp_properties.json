@@ -1,0 +1,22 @@
+{
+  "configurations": [
+    {
+      "name": "Linux",
+      "includePath": [
+        "${default}",
+        "${workspaceFolder}/**",
+        "/opt/ros/humble/include/**",
+        "/opt/ros/humble/lib/**",
+        "/opt/ros/humble/share/**",
+        "/home/turtle/nav_ws/src/nav_drone/nav2_drone_costmap_3d/include/**",
+        "/home/turtle/nav_ws/src/nav_drone/nav2_drone_util/include/**"
+      ],
+      "defines": [],
+      "compilerPath": "/usr/bin/g++",
+      "cStandard": "c99",
+      "cppStandard": "c++14",
+      "intelliSenseMode": "linux-gcc-x64"
+    }
+  ],
+  "version": 4
+}
