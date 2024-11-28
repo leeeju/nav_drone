@@ -98,4 +98,4 @@ private:
   bool running_{false}; ///< Indicates if the timer is currently running.
 };
 
-}  // namespace nav_drone_util
+}  // namespace nav2_drone_util

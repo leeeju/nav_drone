@@ -1,6 +1,6 @@
 #include "costmap_3d.hpp"
 
-namespace nav_drone_costmap_3d {
+namespace nav2_drone_costmap_3d {
 
 Costmap3D::Costmap3D(float resolution, float default_cost)
     : resolution_(resolution), z_dim_(GRID_LENGTH_Z), e_dim_(GRID_LENGTH_E) {
@@ -77,4 +77,4 @@ bool Costmap3D::isEmpty() const {
   return costmap_.isZero(0.001f);
 }
 
-}  // namespace nav_drone_costmap_3d
+}  // namespace nav2_drone_costmap_3d

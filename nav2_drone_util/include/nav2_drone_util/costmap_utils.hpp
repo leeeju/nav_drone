@@ -65,4 +65,4 @@ inline double normalize_angle(double angle) {
     return result < 0.0 ? result + PI : result - PI;
 }
 
-} // namespace nav_drone_util
+} // namespace nav2_drone_util

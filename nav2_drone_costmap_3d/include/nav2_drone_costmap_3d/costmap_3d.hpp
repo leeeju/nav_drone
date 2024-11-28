@@ -4,7 +4,7 @@
 #include <vector>
 #include <geometry_msgs/msg/point.hpp>
 
-namespace nav_drone_costmap_3d {
+namespace nav2_drone_costmap_3d {
 
 // Valid resolutions for ALPHA_RES must satisfy: 180 % (2 * ALPHA_RES) = 0
 // Examples of valid values: 1, 3, 5, 6, 10, 15, 18, 30, 45, 60
@@ -64,4 +64,4 @@ private:
   inline void wrapIndex(int &elevation_idx, int &azimuth_idx) const;
 };
 
-}  // namespace nav_drone_costmap_3d
+}  // namespace nav2_drone_costmap_3d

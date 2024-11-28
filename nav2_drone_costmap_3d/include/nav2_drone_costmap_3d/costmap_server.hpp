@@ -12,7 +12,7 @@
 #include "builtin_interfaces/msg/duration.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-// #include "nav_drone_msgs/msg/costmap.hpp"
+// #include "nav2_drone_msgs/msg/costmap.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 
@@ -27,7 +27,7 @@
 
 using namespace std::chrono_literals;
 
-namespace nav_drone_costmap_3d {
+namespace nav2_drone_costmap_3d {
 
 class CostmapServer : public rclcpp::Node {
 public:
@@ -104,7 +104,7 @@ private:
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscription_;
 
   // Publishers
-  rclcpp::Publisher<nav_drone_msgs::msg::Costmap>::SharedPtr costmap_publisher_;
+  rclcpp::Publisher<nav2_drone_msgs::msg::Costmap>::SharedPtr costmap_publisher_;
 
   // Helper functions
   void mapCallback(const octomap_msgs::msg::Octomap::SharedPtr msg);
@@ -113,4 +113,4 @@ private:
   double computeLookaheadDistance(const geometry_msgs::msg::Twist &velocity);
 };
 
-}  // namespace nav_drone_costmap_3d
+}  // namespace nav2_drone_costmap_3d

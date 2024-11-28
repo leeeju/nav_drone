@@ -102,4 +102,4 @@ inline double deg_to_rad(const double deg) {
     return (deg * PI) / 180.0;
 }
 
-} // namespace nav_drone_util
+} // namespace nav2_drone_util

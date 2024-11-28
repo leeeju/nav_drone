@@ -4,9 +4,10 @@
 #include <vector>
 #include <memory>
 #include "nav2_drone_costmap_3d/costmap_3d.hpp"
+#include "nav2_drone_costmap_3d/layered_costmap_3d.hpp"
 
 // Forward declaration of Costmap3D
-class Costmap3D;
+// class Costmap3D;
 
 namespace nav2_drone_costmap_3d
 {

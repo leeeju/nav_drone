@@ -6,7 +6,7 @@
 
 #include <octomap_msgs/conversions.h>
 
-namespace nav_drone_costmap_3d {
+namespace nav2_drone_costmap_3d {
 
 CostmapPublisher::CostmapPublisher(const std::string &name)
     : Node(name),
@@ -19,12 +19,12 @@ CostmapPublisher::CostmapPublisher(const std::string &name)
 
 void CostmapPublisher::init() {
   // Declare parameters
-  nav_drone_util::declare_parameter_if_not_declared(this, "map_frame", rclcpp::ParameterValue("map"));
-  nav_drone_util::declare_parameter_if_not_declared(this, "robot_base_frame", rclcpp::ParameterValue("base_link"));
-  nav_drone_util::declare_parameter_if_not_declared(this, "transform_tolerance", rclcpp::ParameterValue(0.3));
-  nav_drone_util::declare_parameter_if_not_declared(this, "lookahead_dist", rclcpp::ParameterValue(2.0));
-  nav_drone_util::declare_parameter_if_not_declared(this, "robot_radius", rclcpp::ParameterValue(0.5));
-  nav_drone_util::declare_parameter_if_not_declared(this, "safety_radius", rclcpp::ParameterValue(0.5));
+  nav2_drone_util::declare_parameter_if_not_declared(this, "map_frame", rclcpp::ParameterValue("map"));
+  nav2_drone_util::declare_parameter_if_not_declared(this, "robot_base_frame", rclcpp::ParameterValue("base_link"));
+  nav2_drone_util::declare_parameter_if_not_declared(this, "transform_tolerance", rclcpp::ParameterValue(0.3));
+  nav2_drone_util::declare_parameter_if_not_declared(this, "lookahead_dist", rclcpp::ParameterValue(2.0));
+  nav2_drone_util::declare_parameter_if_not_declared(this, "robot_radius", rclcpp::ParameterValue(0.5));
+  nav2_drone_util::declare_parameter_if_not_declared(this, "safety_radius", rclcpp::ParameterValue(0.5));
 
   // Get parameters
   this->get_parameter("map_frame", map_frame_);
@@ -50,7 +50,7 @@ void CostmapPublisher::init() {
       "drone/odom", 10, std::bind(&CostmapPublisher::odom_callback, this, std::placeholders::_1));
 
   // Publisher
-  costmap_publisher_ = this->create_publisher<nav_drone_msgs::msg::Costmap>("nav_drone/costmap", 10);
+  costmap_publisher_ = this->create_publisher<nav2_drone_msgs::msg::Costmap>("nav_drone/costmap", 10);
 
   // Timer
   timer_ = this->create_wall_timer(500ms, std::bind(&CostmapPublisher::publish_costmap, this));
@@ -74,7 +74,7 @@ void CostmapPublisher::odom_callback(const nav_msgs::msg::Odometry::SharedPtr ms
 
 bool CostmapPublisher::update_costmap(const geometry_msgs::msg::PoseStamped &current_pose, double bounding_box_radius) {
   if (!octomap_) {
-    throw nav_drone_core::CostmapUpdateError("No Octomap available for costmap update.");
+    throw nav2_drone_core::CostmapUpdateError("No Octomap available for costmap update.");
   }
 
   costmap_mutex.lock();
@@ -113,7 +113,7 @@ void CostmapPublisher::publish_costmap() {
   }
 
   geometry_msgs::msg::PoseStamped current_pose;
-  if (!nav_drone_util::getCurrentPose(current_pose, *tf_buffer_, map_frame_, robot_base_frame_, transform_tolerance_)) {
+  if (!nav2_drone_util::getCurrentPose(current_pose, *tf_buffer_, map_frame_, robot_base_frame_, transform_tolerance_)) {
     RCLCPP_WARN(this->get_logger(), "Failed to get robot pose.");
     return;
   }
@@ -121,12 +121,12 @@ void CostmapPublisher::publish_costmap() {
   try {
     double bounding_box_radius = lookahead_dist_;
     update_costmap(current_pose, bounding_box_radius);
-  } catch (const nav_drone_core::CostmapUpdateError &e) {
+  } catch (const nav2_drone_core::CostmapUpdateError &e) {
     RCLCPP_ERROR(this->get_logger(), "Costmap update failed: %s", e.what());
     return;
   }
 
-  auto message = nav_drone_msgs::msg::Costmap();
+  auto message = nav2_drone_msgs::msg::Costmap();
   message.header.stamp = this->get_clock()->now();
   message.header.frame_id = map_frame_;
 
@@ -143,7 +143,7 @@ void CostmapPublisher::publish_costmap() {
 }
 
 bool CostmapPublisher::getRobotPose(geometry_msgs::msg::PoseStamped &global_pose) {
-  return nav_drone_util::getCurrentPose(global_pose, *tf_buffer_, map_frame_, robot_base_frame_, transform_tolerance_);
+  return nav2_drone_util::getCurrentPose(global_pose, *tf_buffer_, map_frame_, robot_base_frame_, transform_tolerance_);
 }
 
-}  // namespace nav_drone_costmap_3d
+}  // namespace nav2_drone_costmap_3d

@@ -24,6 +24,8 @@ find_package(message_filters REQUIRED)
 find_package(octomap REQUIRED)
 find_package(octomap_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+# find_package(nav2_drone_util REQUIRED)
+
 
 # Library
 add_library(${PROJECT_NAME}_core SHARED
@@ -31,12 +33,13 @@ add_library(${PROJECT_NAME}_core SHARED
   src/costmap_server.cpp
 )
 
-# Include directories
 target_include_directories(${PROJECT_NAME}_core
   PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
+
+
 
 # Link dependencies
 ament_target_dependencies(${PROJECT_NAME}_core
@@ -56,6 +59,7 @@ ament_target_dependencies(${PROJECT_NAME}_core
   octomap
   octomap_msgs
   std_srvs
+  # nav2_drone_util
 )
 
 # Install targets

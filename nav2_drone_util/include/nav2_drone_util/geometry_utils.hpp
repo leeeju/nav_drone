@@ -175,6 +175,6 @@ inline geometry_msgs::msg::Point sphereSegmentIntersection(
   return intersection;
 }
 
-}  // namespace nav_drone_util
+}  // namespace nav2_drone_util
 
 #endif  // NAV_DRONE_UTIL__GEOMETRY_UTILS_HPP_

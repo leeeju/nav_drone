@@ -9,7 +9,8 @@
         "/opt/ros/humble/lib/**",
         "/opt/ros/humble/share/**",
         "/home/turtle/nav_ws/src/nav_drone/nav2_drone_costmap_3d/include/**",
-        "/home/turtle/nav_ws/src/nav_drone/nav2_drone_util/include/**"
+        "/home/turtle/nav_ws/src/nav_drone/nav2_drone_util/include/**",
+        "/home/turtle/nav_ws/src/nav_drone/nav2_drone_core/include/**"
       ],
       "defines": [],
       "compilerPath": "/usr/bin/g++",
