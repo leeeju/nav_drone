@@ -1,56 +1,43 @@
 #include "nav2_drone_util/node_utils.hpp"
-#include <rclcpp/rclcpp.hpp>
-#include <rcl_interfaces/msg/parameter.hpp>
+#include "rclcpp/rclcpp.hpp"
 
 namespace nav2_drone_util {
 
-// Example utility function to print all parameters of a node
-void print_all_parameters(rclcpp::Node::SharedPtr node)
-{
-  auto parameters = node->list_parameters({}, 10);  // Retrieve parameters from the node
+// Define the implementation of the utility functions if needed
 
-  RCLCPP_INFO(node->get_logger(), "Listing parameters for node: %s", node->get_name());
-  for (const auto & name : parameters.names) {
-    try {
-      auto param = node->get_parameter(name);
-      RCLCPP_INFO(node->get_logger(), "Parameter: %s, Value: %s", name.c_str(), param.value_to_string().c_str());
-    } catch (const rclcpp::exceptions::ParameterNotDeclaredException & e) {
-      RCLCPP_WARN(node->get_logger(), "Parameter %s not declared, skipping.", name.c_str());
-    }
-  }
-}
-
-// Example utility function to safely declare and set a parameter
-void declare_and_set_parameter(
-  rclcpp::Node::SharedPtr node,
+// Explicit template instantiation for the declare_parameter_if_not_declared function
+template<typename NodeT>
+void declare_parameter_if_not_declared(
+  NodeT node,
   const std::string & param_name,
-  const rclcpp::ParameterValue & value,
-  const rcl_interfaces::msg::ParameterDescriptor & descriptor = rcl_interfaces::msg::ParameterDescriptor())
+  const rclcpp::ParameterValue & default_value,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor)
 {
   if (!node->has_parameter(param_name)) {
-    RCLCPP_INFO(node->get_logger(), "Declaring parameter: %s", param_name.c_str());
-    node->declare_parameter(param_name, value, descriptor);
-  } else {
-    RCLCPP_INFO(node->get_logger(), "Parameter %s already declared, setting value.", param_name.c_str());
+    node->declare_parameter(param_name, default_value, parameter_descriptor);
+    RCLCPP_INFO(node->get_logger(), "Parameter '%s' declared with default value.", param_name.c_str());
   }
-
-  node->set_parameter(rclcpp::Parameter(param_name, value));
 }
 
-// Example utility function to retrieve a parameter with a fallback
-template<typename T>
-T get_parameter_with_default(
-  rclcpp::Node::SharedPtr node,
-  const std::string & param_name,
-  const T & default_value)
+// Explicit template instantiation for the get_plugin_type_param function
+template<typename NodeT>
+std::string get_plugin_type_param(
+  NodeT node,
+  const std::string & plugin_name)
 {
-  T value;
-  if (!node->get_parameter(param_name, value)) {
-    RCLCPP_WARN(node->get_logger(), "Parameter %s not set, using default: %s",
-      param_name.c_str(), std::to_string(default_value).c_str());
-    value = default_value;
+  declare_parameter_if_not_declared(node, plugin_name + ".plugin", rclcpp::ParameterValue(""),
+    rcl_interfaces::msg::ParameterDescriptor().set_description("Plugin type for " + plugin_name));
+
+  std::string plugin_type;
+  if (!node->get_parameter(plugin_name + ".plugin", plugin_type)) {
+    RCLCPP_FATAL(node->get_logger(), "Failed to get 'plugin' parameter for plugin: %s", plugin_name.c_str());
+    throw std::runtime_error("Plugin parameter not defined: " + plugin_name);
   }
-  return value;
+
+  RCLCPP_INFO(node->get_logger(), "Plugin type for '%s': %s", plugin_name.c_str(), plugin_type.c_str());
+  return plugin_type;
 }
 
-}  // namespace nav_drone_util
+// Additional utility functions can be implemented here as needed
+
+} // namespace nav2_drone_util

@@ -24,25 +24,35 @@ find_package(message_filters REQUIRED)
 find_package(octomap REQUIRED)
 find_package(octomap_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
-# find_package(nav2_drone_util REQUIRED)
-
+find_package(nav2_drone_util REQUIRED)
+# find_package(nav2_drone_core REQUIRED)
 
 # Library
-add_library(${PROJECT_NAME}_core SHARED
+add_library(${PROJECT_NAME} SHARED
   src/costmap_3d.cpp
   src/costmap_server.cpp
+  src/costmap_publisher.cpp
 )
+set(costmap_publisher_executable costmap_publisher)
 
-target_include_directories(${PROJECT_NAME}_core
+set(library_name ${costmap_publisher_executable}_lib)
+
+# Include directories
+target_include_directories(${PROJECT_NAME}
   PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/nav2_drone_msgs/include>"
 )
 
+include_directories(
+  include(${PROJECT_NAME})
+  include(nav2_drone_msgs)
 
+)
 
 # Link dependencies
-ament_target_dependencies(${PROJECT_NAME}_core
+ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_lifecycle
   geometry_msgs
@@ -59,12 +69,24 @@ ament_target_dependencies(${PROJECT_NAME}_core
   octomap
   octomap_msgs
   std_srvs
-  # nav2_drone_util
+  nav2_drone_util
+  # nav2_drone_core
 )
+
+# Link additional libraries
+# target_link_libraries(costmap_publisher
+#   ${library_name}
+# )
+
+# install(TARGETS
+#   costmap_publisher
+#   RUNTIME DESTINATION lib/${PROJECT_NAME}
+# )
+# add_executable(costmap_publisher src/costmap_publisher.cpp)
 
 # Install targets
 install(
-  TARGETS ${PROJECT_NAME}_core
+  TARGETS ${PROJECT_NAME}
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
@@ -73,14 +95,16 @@ install(
 
 # Install headers
 install(
-  DIRECTORY include/
+  DIRECTORY
+  include
   DESTINATION include/${PROJECT_NAME}
 )
 
-# Testing setup
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+  add_executable(costmap_publisher src/costmap_publisher.cpp)
+  target_link_libraries(costmap_publisher ${PROJECT_NAME})
 endif()
 
 # Mark as ament package

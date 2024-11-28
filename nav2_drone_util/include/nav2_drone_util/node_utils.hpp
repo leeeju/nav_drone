@@ -2,28 +2,24 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/exceptions/exceptions.hpp"
+#include <stdexcept>
 
 namespace nav2_drone_util {
 
 /**
- * @brief Declares a static ROS2 parameter and sets it to a default value if not already declared
+ * @brief Declares a parameter if it hasn't been declared yet and initializes it with a default value.
  *
- * This utility function ensures that the parameter is declared in the node, avoiding runtime
- * errors caused by attempting to access undeclared parameters.
- *
- * @tparam NodeT The node type
- * @param node The node in which the parameter is to be declared
- * @param param_name The name of the parameter
- * @param default_value The default value to initialize the parameter with
- * @param parameter_descriptor (Optional) The parameter descriptor for additional metadata
+ * @param node The node where the parameter is declared.
+ * @param param_name Name of the parameter to declare.
+ * @param default_value Default value to initialize the parameter if it hasn't been declared.
+ * @param parameter_descriptor Optional descriptor for the parameter.
  */
 template<typename NodeT>
 void declare_parameter_if_not_declared(
   NodeT node,
   const std::string & param_name,
   const rclcpp::ParameterValue & default_value,
-  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
-    rcl_interfaces::msg::ParameterDescriptor())
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor = {})
 {
   if (!node->has_parameter(param_name)) {
     node->declare_parameter(param_name, default_value, parameter_descriptor);
@@ -31,23 +27,19 @@ void declare_parameter_if_not_declared(
 }
 
 /**
- * @brief Declares a static ROS2 parameter with a given type if not already declared
+ * @brief Declares a parameter with a specific type if it hasn't been declared yet.
  *
- * This function is useful when the parameter type is known and explicitly specified.
- *
- * @tparam NodeT The node type
- * @param node The node in which the parameter is to be declared
- * @param param_name The name of the parameter
- * @param param_type The type of the parameter
- * @param parameter_descriptor (Optional) The parameter descriptor for additional metadata
+ * @param node The node where the parameter is declared.
+ * @param param_name Name of the parameter to declare.
+ * @param param_type The type of the parameter (e.g., rclcpp::PARAMETER_INTEGER).
+ * @param parameter_descriptor Optional descriptor for the parameter.
  */
 template<typename NodeT>
 void declare_parameter_if_not_declared(
   NodeT node,
   const std::string & param_name,
   const rclcpp::ParameterType & param_type,
-  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
-    rcl_interfaces::msg::ParameterDescriptor())
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor = {})
 {
   if (!node->has_parameter(param_name)) {
     node->declare_parameter(param_name, param_type, parameter_descriptor);
@@ -55,41 +47,42 @@ void declare_parameter_if_not_declared(
 }
 
 /**
- * @brief Retrieves the type of plugin associated with a given plugin name
+ * @brief Retrieves the type of a plugin specified by its parameter.
  *
- * This utility function searches for a parameter `<plugin_name>.plugin` in the node
- * and retrieves its value. It ensures the parameter is declared before attempting to access it.
+ * This function fetches the value of the parameter "<plugin_name>.plugin" and ensures the parameter is declared.
  *
- * @tparam NodeT The node type
- * @param node The node from which the plugin type parameter will be retrieved
- * @param plugin_name The name of the plugin
- * @return A string containing the type of the plugin
+ * @param node The node from which the plugin type is retrieved.
+ * @param plugin_name Name of the plugin whose type parameter is being retrieved.
+ * @return A string representing the plugin type.
+ * @throws std::runtime_error If the parameter cannot be retrieved.
  */
 template<typename NodeT>
 std::string get_plugin_type_param(
   NodeT node,
   const std::string & plugin_name)
 {
-  // Declare the plugin parameter if not already declared
-  declare_parameter_if_not_declared(node, plugin_name + ".plugin", rclcpp::PARAMETER_STRING);
+  declare_parameter_if_not_declared(node, plugin_name + ".plugin", rclcpp::ParameterValue(""));
 
-  // Retrieve the plugin type parameter
   std::string plugin_type;
   try {
     if (!node->get_parameter(plugin_name + ".plugin", plugin_type)) {
-      RCLCPP_FATAL(
-        node->get_logger(), "Failed to retrieve 'plugin' parameter for %s", plugin_name.c_str());
-      exit(EXIT_FAILURE);
+      throw std::runtime_error(
+        "Failed to retrieve plugin type for " + plugin_name + ". Check parameter definition.");
     }
+  } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
+    RCLCPP_FATAL(
+      node->get_logger(),
+      "Plugin parameter '%s.plugin' not declared for %s. Exception: %s",
+      plugin_name.c_str(), plugin_name.c_str(), ex.what());
+    throw;
   } catch (const rclcpp::exceptions::ParameterImmutableException & ex) {
     RCLCPP_FATAL(
       node->get_logger(),
-      "Parameter 'plugin' for %s is immutable or not defined: %s",
-      plugin_name.c_str(), ex.what());
-    exit(EXIT_FAILURE);
+      "Plugin parameter '%s.plugin' is immutable for %s. Exception: %s",
+      plugin_name.c_str(), plugin_name.c_str(), ex.what());
+    throw;
   }
-
   return plugin_type;
 }
 
-} // namespace nav_drone_util
+}  // namespace nav2_drone_util

@@ -1,51 +1,48 @@
 #pragma once
 
-#include <chrono>
+#include <chrono>  // For high_resolution_clock
 
 namespace nav2_drone_util {
 
 /**
- * @brief A utility timer that triggers a "hold-down" period once a condition is met.
- *
- * The timer starts when the given condition becomes true and remains active
- * for a specified duration. It resets if the condition fails during this period.
+ * @brief A timer that activates when a condition holds true for a specified duration.
  */
 class HolddownTimer {
 public:
   using Clock = std::chrono::high_resolution_clock;
-  using Seconds = std::chrono::duration<double>;
+  using TimePoint = std::chrono::time_point<Clock>;
 
   /**
-   * @brief Constructor to initialize the timer with a specific hold-down duration
-   * @param duration_seconds The duration for the hold-down period in seconds
+   * @brief Construct a HolddownTimer.
+   * @param duration_sec Duration in seconds that the condition must hold true.
    */
-  explicit HolddownTimer(double duration_seconds)
-  : duration_{Seconds(duration_seconds)}, running_{false} {}
+  explicit HolddownTimer(double duration_sec)
+  : duration_{std::chrono::duration<double>(duration_sec)}, running_{false} {}
 
   /**
-   * @brief Test and manage the hold-down timer based on a condition
+   * @brief Test the condition and update the timer state.
    *
-   * If the condition is true, the timer starts and checks if the hold-down duration has passed.
-   * If the condition becomes false, the timer resets.
+   * Starts the timer when the condition is true. If the condition remains true
+   * for the specified duration, the function returns true. The timer resets when
+   * the condition becomes false.
    *
-   * @param condition The condition to evaluate for triggering or maintaining the timer
-   * @return True if the timer is running and the hold-down period has elapsed; otherwise, false
+   * @param condition The condition to evaluate.
+   * @return True if the condition has held for the specified duration, false otherwise.
    */
   bool test(bool condition) {
     auto current_time = Clock::now();
 
     if (!running_ && condition) {
-      // Start the timer when the condition is first met
+      // Start the timer when the condition becomes true
       running_ = true;
       start_time_ = current_time;
-    } else if (running_ && !condition) {
-      // Reset the timer if the condition fails
+    } else if (!condition) {
+      // Reset the timer if the condition becomes false
       running_ = false;
     }
 
     if (running_) {
-      // Check if the hold-down duration has passed
-      Seconds elapsed = current_time - start_time_;
+      auto elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(current_time - start_time_);
       return elapsed >= duration_;
     }
 
@@ -53,32 +50,24 @@ public:
   }
 
   /**
-   * @brief Reset the timer manually
+   * @brief Resets the timer to its initial state.
    */
   void reset() {
     running_ = false;
   }
 
   /**
-   * @brief Adjust the hold-down duration dynamically
-   * @param duration_seconds The new hold-down duration in seconds
+   * @brief Check if the timer is currently running.
+   * @return True if the timer is active, false otherwise.
    */
-  void setDuration(double duration_seconds) {
-    duration_ = Seconds(duration_seconds);
-  }
-
-  /**
-   * @brief Get the current hold-down duration
-   * @return The hold-down duration in seconds
-   */
-  double getDuration() const {
-    return duration_.count();
+  bool is_running() const {
+    return running_;
   }
 
 private:
-  Seconds duration_;                        ///< Hold-down period duration
-  Clock::time_point start_time_;            ///< Time point when the timer started
-  bool running_;                            ///< Indicates if the timer is currently active
+  std::chrono::duration<double> duration_;  // Duration the condition must hold
+  TimePoint start_time_;                    // Start time of the timer
+  bool running_;                            // Whether the timer is currently active
 };
 
-} // namespace nav2_drone_util
+}  // namespace nav2_drone_util

@@ -2,86 +2,63 @@
 
 #include <memory>
 #include <thread>
-#include <utility>
-
 #include "rclcpp/rclcpp.hpp"
 
 namespace nav2_drone_util
 {
 
 /**
- * @class nav_drone_util::NodeThread
- * @brief A utility class to process node or executor callbacks in a separate thread
+ * @class nav2_drone_util::NodeThread
+ * @brief A utility class that spins a node or executor in a separate thread.
+ *
+ * Useful for handling background tasks such as processing callbacks or managing
+ * event loops without blocking the main thread.
  */
 class NodeThread
 {
 public:
   /**
-   * @brief Constructor for processing a node's callbacks in a background thread
-   * @param node_base Interface to the node's base interface to spin in a separate thread
+   * @brief Construct a NodeThread to spin a node's callbacks in a background thread.
+   * @param node_base The base interface of the node to spin in a thread.
    */
-  explicit NodeThread(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base)
-  : node_(std::move(node_base)),
-    thread_(std::make_unique<std::thread>(&NodeThread::spinNode, this))
-  {}
+  explicit NodeThread(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base);
 
   /**
-   * @brief Constructor for processing executor callbacks in a background thread
-   * @param executor Shared pointer to an executor to process callbacks
+   * @brief Construct a NodeThread to spin an executor's callbacks in a background thread.
+   * @param executor A shared pointer to the executor to spin in the thread.
    */
-  explicit NodeThread(rclcpp::executors::SingleThreadedExecutor::SharedPtr executor)
-  : executor_(std::move(executor)),
-    thread_(std::make_unique<std::thread>(&NodeThread::spinExecutor, this))
-  {}
+  explicit NodeThread(rclcpp::executors::SingleThreadedExecutor::SharedPtr executor);
 
   /**
-   * @brief Constructor template for processing a node's callbacks
-   * @param node A shared pointer to the node
-   * @tparam NodeT The type of the node
+   * @brief Construct a NodeThread to spin a templated node in a background thread.
+   * @param node A pointer to a templated node to spin in the thread.
    */
   template<typename NodeT>
-  explicit NodeThread(std::shared_ptr<NodeT> node)
+  explicit NodeThread(NodeT node)
   : NodeThread(node->get_node_base_interface())
   {}
 
   /**
-   * @brief Destructor to cleanly stop the thread
+   * @brief Destructor to ensure proper cleanup of the thread and executor.
    */
-  ~NodeThread()
-  {
-    if (thread_ && thread_->joinable()) {
-      if (executor_) {
-        executor_->cancel();  // Stop the executor gracefully
-      }
-      thread_->join();  // Join the thread to ensure proper cleanup
-    }
-  }
+  ~NodeThread();
+
+  /**
+   * @brief Check if the thread is currently running.
+   * @return True if the thread is running, false otherwise.
+   */
+  bool is_running() const;
+
+  /**
+   * @brief Stop the spinning thread.
+   */
+  void stop();
 
 private:
-  /**
-   * @brief Spin the node in a background thread
-   */
-  void spinNode()
-  {
-    rclcpp::executors::SingleThreadedExecutor executor;
-    executor.add_node(node_);
-    executor.spin();
-    executor.remove_node(node_);
-  }
-
-  /**
-   * @brief Spin the provided executor in a background thread
-   */
-  void spinExecutor()
-  {
-    if (executor_) {
-      executor_->spin();
-    }
-  }
-
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_{nullptr}; ///< Node base interface
-  rclcpp::Executor::SharedPtr executor_{nullptr}; ///< Executor shared pointer
-  std::unique_ptr<std::thread> thread_; ///< Thread for background spinning
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_;  ///< Node interface to spin
+  std::unique_ptr<std::thread> thread_;                        ///< Background thread
+  rclcpp::Executor::SharedPtr executor_;                       ///< Executor managing the callbacks
+  std::atomic<bool> running_{false};                           ///< Indicates if the thread is running
 };
 
-}  // namespace nav_drone_util
+}  // namespace nav2_drone_util

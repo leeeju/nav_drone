@@ -1,12 +1,10 @@
-#ifndef NAV_DRONE_UTIL__GEOMETRY_UTILS_HPP_
-#define NAV_DRONE_UTIL__GEOMETRY_UTILS_HPP_
+#ifndef nav2_drone_util__GEOMETRY_UTILS_HPP_
+#define nav2_drone_util__GEOMETRY_UTILS_HPP_
 
 #include <cmath>
 #include <stdexcept>
 #include <string>
-#include <vector>
 #include <memory>
-#include <algorithm>
 
 #include "geometry_msgs/msg/pose.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
@@ -19,9 +17,7 @@
 namespace nav2_drone_util
 {
 
-/**
- * @brief Exception class for geometry-related errors
- */
+// Exception for geometry-related errors
 class GeometryException : public std::runtime_error
 {
 public:
@@ -29,9 +25,7 @@ public:
   : std::runtime_error(description) {}
 };
 
-/**
- * @brief Exception for errors related to geometry bounds
- */
+// Exception for boundary-related geometry errors
 class GeometryBoundsError : public GeometryException
 {
 public:
@@ -40,141 +34,140 @@ public:
 };
 
 /**
- * @brief Get a quaternion representing rotation about the Z-axis
+ * @brief Converts yaw angle to a geometry_msgs Quaternion
  * @param angle Yaw angle in radians
- * @return Quaternion representing the rotation
+ * @return geometry_msgs Quaternion
  */
 inline geometry_msgs::msg::Quaternion orientationAroundZAxis(double angle)
 {
   tf2::Quaternion q;
-  q.setRPY(0, 0, angle);  // Rotation about Z-axis
+  q.setRPY(0, 0, angle);  // Only rotate around the Z-axis
   return tf2::toMsg(q);
 }
 
 /**
- * @brief Compute the Euclidean distance between two points
+ * @brief Computes the Euclidean distance between two geometry_msgs Points
  * @param pos1 First point
  * @param pos2 Second point
- * @param is_3d If true, computes the 3D distance; otherwise, computes the 2D distance (default false)
- * @return Euclidean distance
+ * @param is_3d Calculate 3D distance if true, otherwise 2D distance
+ * @return double Euclidean distance
  */
 inline double euclidean_distance(
   const geometry_msgs::msg::Point & pos1,
   const geometry_msgs::msg::Point & pos2,
-  bool is_3d = false)
+  const bool is_3d = false)
 {
   double dx = pos1.x - pos2.x;
   double dy = pos1.y - pos2.y;
 
   if (is_3d) {
     double dz = pos1.z - pos2.z;
-    return std::hypot(dx, std::hypot(dy, dz));
+    return std::sqrt(dx * dx + dy * dy + dz * dz);
   }
-
   return std::hypot(dx, dy);
 }
 
 /**
- * @brief Compute the Euclidean distance between two poses
- * @param pose1 First pose
- * @param pose2 Second pose
- * @param is_3d If true, computes the 3D distance; otherwise, computes the 2D distance (default false)
- * @return Euclidean distance
+ * @brief Computes the Euclidean distance between two geometry_msgs Poses
+ * @param pos1 First pose
+ * @param pos2 Second pose
+ * @param is_3d Calculate 3D distance if true, otherwise 2D distance
+ * @return double Euclidean distance
  */
 inline double euclidean_distance(
-  const geometry_msgs::msg::Pose & pose1,
-  const geometry_msgs::msg::Pose & pose2,
-  bool is_3d = false)
+  const geometry_msgs::msg::Pose & pos1,
+  const geometry_msgs::msg::Pose & pos2,
+  const bool is_3d = false)
 {
-  return euclidean_distance(pose1.position, pose2.position, is_3d);
+  return euclidean_distance(pos1.position, pos2.position, is_3d);
 }
 
 /**
- * @brief Compute the Euclidean distance between two stamped poses
- * @param pose1 First pose
- * @param pose2 Second pose
- * @param is_3d If true, computes the 3D distance; otherwise, computes the 2D distance (default false)
- * @return Euclidean distance
+ * @brief Computes the Euclidean distance between two geometry_msgs PoseStamped
+ * @param pos1 First pose
+ * @param pos2 Second pose
+ * @param is_3d Calculate 3D distance if true, otherwise 2D distance
+ * @return double Euclidean distance
  */
 inline double euclidean_distance(
-  const geometry_msgs::msg::PoseStamped & pose1,
-  const geometry_msgs::msg::PoseStamped & pose2,
-  bool is_3d = false)
+  const geometry_msgs::msg::PoseStamped & pos1,
+  const geometry_msgs::msg::PoseStamped & pos2,
+  const bool is_3d = false)
 {
-  return euclidean_distance(pose1.pose, pose2.pose, is_3d);
+  return euclidean_distance(pos1.pose, pos2.pose, is_3d);
 }
 
 /**
- * @brief Calculate the total length of a path
- * @param path The path consisting of a sequence of poses
- * @param start_index The index to start calculating from (default 0)
- * @return Total path length
+ * @brief Computes the total length of a given path
+ * @param path Path to measure
+ * @param start_index Starting index for measurement
+ * @return double Path length
  */
 inline double calculate_path_length(const nav_msgs::msg::Path & path, size_t start_index = 0)
 {
   if (start_index + 1 >= path.poses.size()) {
     return 0.0;
   }
-
   double path_length = 0.0;
-  for (size_t i = start_index; i < path.poses.size() - 1; ++i) {
-    path_length += euclidean_distance(path.poses[i].pose, path.poses[i + 1].pose);
+  for (size_t idx = start_index; idx < path.poses.size() - 1; ++idx) {
+    path_length += euclidean_distance(path.poses[idx].pose, path.poses[idx + 1].pose);
   }
-
   return path_length;
 }
 
 /**
- * @brief Find the intersection point of a line segment and a sphere
- * @param p1 Start point of the segment
- * @param p2 End point of the segment
- * @param center Center of the sphere
- * @param radius Radius of the sphere
- * @return Intersection point on the segment
- * @throws GeometryBoundsError if the segment does not intersect the sphere
+ * @brief Finds the intersection of a sphere and a line segment
+ * @param p1 First endpoint of the segment
+ * @param p2 Second endpoint of the segment
+ * @param cen Center of the sphere
+ * @param r Radius of the sphere
+ * @return geometry_msgs::msg::Point Intersection point
+ * @throws GeometryBoundsError if no intersection exists
  */
 inline geometry_msgs::msg::Point sphereSegmentIntersection(
   const geometry_msgs::msg::Point & p1,
   const geometry_msgs::msg::Point & p2,
-  const geometry_msgs::msg::Point & center,
-  double radius)
+  const geometry_msgs::msg::Point & cen,
+  double r)
 {
-  // Calculate coefficients of the quadratic equation
   double dx = p2.x - p1.x;
   double dy = p2.y - p1.y;
   double dz = p2.z - p1.z;
 
   double a = dx * dx + dy * dy + dz * dz;
-  double b = 2 * (dx * (p1.x - center.x) + dy * (p1.y - center.y) + dz * (p1.z - center.z));
-  double c = (p1.x - center.x) * (p1.x - center.x) +
-             (p1.y - center.y) * (p1.y - center.y) +
-             (p1.z - center.z) * (p1.z - center.z) -
-             radius * radius;
+  double b = 2.0 * ((p1.x - cen.x) * dx + (p1.y - cen.y) * dy + (p1.z - cen.z) * dz);
+  double c = (p1.x - cen.x) * (p1.x - cen.x) +
+             (p1.y - cen.y) * (p1.y - cen.y) +
+             (p1.z - cen.z) * (p1.z - cen.z) - r * r;
 
   double discriminant = b * b - 4 * a * c;
-
   if (discriminant < 0) {
     throw GeometryBoundsError("Line segment does not intersect sphere");
   }
 
-  double t1 = (-b - std::sqrt(discriminant)) / (2 * a);
-  double t2 = (-b + std::sqrt(discriminant)) / (2 * a);
+  double t1 = (-b - std::sqrt(discriminant)) / (2.0 * a);
+  double t2 = (-b + std::sqrt(discriminant)) / (2.0 * a);
 
-  // Ensure t1 and t2 are within the segment range [0, 1]
-  double t = (t1 >= 0 && t1 <= 1) ? t1 : t2;
-  if (t < 0 || t > 1) {
-    throw GeometryBoundsError("Intersection point is outside the segment");
+  geometry_msgs::msg::Point intersection1;
+  intersection1.x = p1.x + t1 * dx;
+  intersection1.y = p1.y + t1 * dy;
+  intersection1.z = p1.z + t1 * dz;
+
+  geometry_msgs::msg::Point intersection2;
+  intersection2.x = p1.x + t2 * dx;
+  intersection2.y = p1.y + t2 * dy;
+  intersection2.z = p1.z + t2 * dz;
+
+  // Return the intersection point closest to p1 within the segment
+  if (0.0 <= t1 && t1 <= 1.0) {
+    return intersection1;
+  } else if (0.0 <= t2 && t2 <= 1.0) {
+    return intersection2;
   }
 
-  // Calculate intersection point
-  geometry_msgs::msg::Point intersection;
-  intersection.x = p1.x + t * dx;
-  intersection.y = p1.y + t * dy;
-  intersection.z = p1.z + t * dz;
-
-  return intersection;
+  throw GeometryBoundsError("Intersection points lie outside the segment");
 }
 
 }  // namespace nav2_drone_util
 
-#endif  // NAV_DRONE_UTIL__GEOMETRY_UTILS_HPP_
+#endif  // nav2_drone_util__GEOMETRY_UTILS_HPP_

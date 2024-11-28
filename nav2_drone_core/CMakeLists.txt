@@ -12,7 +12,7 @@ find_package(rclcpp_lifecycle REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
-find_package(nav_msgs REQUIRED)
+find_package(nav2_drone_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2 REQUIRED)
 
@@ -23,7 +23,7 @@ set(dependencies
   std_msgs
   geometry_msgs
   pluginlib
-  nav_msgs
+  nav2_drone_msgs
   tf2_ros
   tf2
 )

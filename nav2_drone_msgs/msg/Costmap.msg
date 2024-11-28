@@ -3,7 +3,8 @@
 std_msgs/Header header
 
 # MetaData for the map
-CostmapMetaData metadata
+nav2_drone_msgs/CostmapMetaData metadata
 
 # The cost data, in row-major order, starting with (0,0,0).
 float32[] data
+

@@ -6,13 +6,15 @@
 #include <mutex>  // std::mutex
 #include <thread> // std::thread for asynchronous operations
 
+#include "nav2_drone_costmap_3d/costmap_publisher.hpp"
+#include "nav2_drone_costmap_3d/costmap_server.hpp"
 #include "nav2_drone_costmap_3d/costmap_3d.hpp"
+#include "nav2_drone_msgs/msg/costmap.hpp"
 // #include "nav2_drone_costmap_3d/cost_values.hpp"
 
 #include "builtin_interfaces/msg/duration.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-// #include "nav2_drone_msgs/msg/costmap.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 
