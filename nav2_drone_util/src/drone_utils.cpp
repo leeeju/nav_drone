@@ -14,7 +14,8 @@ bool getCurrentPose(
   rclcpp::Time stamp)
 {
   geometry_msgs::msg::PoseStamped pose;
-  pose.header.stamp = stamp == rclcpp::Time() ? tf_buffer.get_clock()->now() : stamp;
+  rclcpp::Time now = rclcpp::Clock(RCL_ROS_TIME).now();
+  pose.header.stamp = (stamp == rclcpp::Time()) ? now : stamp;
   pose.header.frame_id = drone_frame;
   pose.pose.orientation.w = 1.0;
 

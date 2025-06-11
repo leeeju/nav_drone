@@ -11,7 +11,6 @@
 #include "pluginlib/class_loader.hpp"
 #include "pluginlib/class_list_macros.hpp"
 //#include "nav2_drone_util/odometry_utils.hpp"
-//#include "nav2_drone_util/geometry_utils.hpp"
 
 #include <dlib/control.h>
 

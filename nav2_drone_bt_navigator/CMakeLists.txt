@@ -34,7 +34,7 @@ set(dependencies
 
 # Build BT Navigator node
 add_executable(bt_navigator_node
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/bt_navigator_node.cpp)
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/bt_navigator.cpp)
 ament_target_dependencies(bt_navigator_node ${dependencies})
 
 # Install rules

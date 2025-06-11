@@ -19,10 +19,14 @@ find_package(pluginlib REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
 
-# Include directories
-target_include_directories(${PROJECT_NAME} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
+# # Include directories
+# target_include_directories(simple_goal_checker PUBLIC
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#   $<INSTALL_INTERFACE:include>
+# )
+
+include_directories(
+  include
 )
 
 # Plugins library (e.g., simple goal/progress checkers)
