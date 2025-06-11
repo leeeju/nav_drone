@@ -49,7 +49,11 @@ target_include_directories(histogram_lib PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-ament_target_dependencies(histogram_lib nav2_drone_core)
+
+ament_target_dependencies(histogram_lib
+  nav2_core
+  nav2_drone_core)
+
 target_link_libraries(histogram_lib Eigen3::Eigen)
 
 # Installation rules

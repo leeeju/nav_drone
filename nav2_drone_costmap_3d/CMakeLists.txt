@@ -1,70 +1,70 @@
-cmake_minimum_required(VERSION 3.10)
-project(nav2_drone_costmap_3d)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+project(nav2_drone_costmap_3d LANGUAGES CXX)
 
-# Default to C++17
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
+# Use C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Compiler warnings
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+# Find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(nav2_costmap_2d REQUIRED)
-find_package(octomap REQUIRED)
+find_package(nav2_core REQUIRED)
 find_package(pluginlib REQUIRED)
-find_package(tf2_ros REQUIRED)
-find_package(nav2_drone_msgs REQUIRED)
-find_package(octomap_msgs REQUIRED)
-find_package(nav2_drone_util REQUIRED)
+find_package(nav_msgs REQUIRED)
 
+# Create library
+add_library(${PROJECT_NAME} SHARED
+  src/costmap_server.cpp
+)
 
-add_library(${PROJECT_NAME}
-  src/costmap_3d.cpp
-  src/costmap_publisher.cpp
-  src/layered_costmap_3d.cpp
-  src/octomap_wrapper.cpp
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
 
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   nav2_costmap_2d
-  octomap
+  nav2_core
   pluginlib
-  tf2_ros
-  nav2_drone_msgs
-  octomap_msgs
-  nav2_drone_util
+  nav_msgs
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC
-  # This package's headers
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  # Include headers from nav2_drone_util (sibling package)
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../nav2_drone_util/include>
-  # Installed include path
-  $<INSTALL_INTERFACE:include>
-)
+# Export plugin
+pluginlib_export_plugin_description_file(${PROJECT_NAME} plugins.xml)
 
-# --------------------------------------------------------------------
-# 3) Export plugin description file
-# --------------------------------------------------------------------
-pluginlib_export_plugin_description_file(nav2_costmap_3d plugins.xml)
-
-# --------------------------------------------------------------------
-# 4) Install headers and library
-# --------------------------------------------------------------------
+# Install rules
 install(
   DIRECTORY include/
-  DESTINATION include
+  DESTINATION include/
 )
-
 install(
   TARGETS ${PROJECT_NAME}
-  LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
+install(
+  FILES plugins.xml
+  DESTINATION share/${PROJECT_NAME}
+)
 
-# --------------------------------------------------------------------
-# 5) Export package
-# --------------------------------------------------------------------
+# Export package configuration
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
+ament_export_dependencies(
+  rclcpp
+  nav2_costmap_2d
+  nav2_core
+  pluginlib
+  nav_msgs
+)
+
 ament_package()

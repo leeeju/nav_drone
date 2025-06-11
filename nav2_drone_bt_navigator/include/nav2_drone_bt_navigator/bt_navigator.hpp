@@ -1,6 +1,6 @@
 // File: include/nav2_drone_bt_navigator/drone_bt_navigator.hpp
 #ifndef NAV2_DRONE_BT_NAVIGATOR__DRONE_BT_NAVIGATOR_HPP_
-#define NAV2_DRONE_BT_NNAVIGATOR__DRONE_BT_NAVIGATOR_HPP_
+#define NAV2_DRONE_BT_NAVIGATOR__DRONE_BT_NAVIGATOR_HPP_
 
 #include <memory>
 #include <string>
@@ -18,7 +18,7 @@
 #include "nav2_drone_core/controller.hpp"
 #include "nav2_drone_core/goal_checker.hpp"
 #include "nav2_drone_core/progress_checker.hpp"
-#include "nav2_drone_core/behavior_tree_navigator.hpp"
+#include "nav2_drone_core/behavior_tree_navigator.hpp"    <--- 이거 작성
 
 namespace nav2_drone_bt_navigator
 {

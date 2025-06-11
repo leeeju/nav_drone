@@ -13,23 +13,20 @@ endif()
 # Find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(nav2_core REQUIRED)
 find_package(nav2_drone_core REQUIRED)
+find_package(nav2_drone_util REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
 
-# # Include directories
-# target_include_directories(simple_goal_checker PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:include>
-# )
-
+# Include local headers
 include_directories(
   include
 )
 
-# Plugins library (e.g., simple goal/progress checkers)
+# Plugins: simple goal checker
 add_library(simple_goal_checker SHARED
   plugins/simple_goal_checker.cpp
 )
@@ -37,9 +34,12 @@ ament_target_dependencies(simple_goal_checker
   rclcpp
   nav2_core
   nav2_drone_core
+  nav2_drone_util
+  pluginlib
+  geometry_msgs
 )
-pluginlib_export_plugin_description_file(${PROJECT_NAME} plugins.xml)
 
+# Plugins: simple progress checker
 add_library(simple_progress_checker SHARED
   plugins/simple_progress_checker.cpp
 )
@@ -47,27 +47,41 @@ ament_target_dependencies(simple_progress_checker
   rclcpp
   nav2_core
   nav2_drone_core
+  nav2_drone_util
+  pluginlib
+  geometry_msgs
 )
-# Controller action server
+
+# Export plugin descriptions
+pluginlib_export_plugin_description_file(${PROJECT_NAME} plugins.xml)
+
+# Controller action server as a component
 add_executable(controller_server
   src/controller_server.cpp
 )
 ament_target_dependencies(controller_server
   rclcpp
+  rclcpp_components
   nav2_core
   nav2_drone_core
+  nav2_drone_util
+  nav2_msgs
+  geometry_msgs
 )
 
-# Installation
+# Register as rclcpp component (requires <register_node_macro>)
+rclcpp_components_register_node(controller_server "nav2_drone_controller::ControllerServer")
+
+# Installation rules
 install(TARGETS
   simple_goal_checker
   simple_progress_checker
   controller_server
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
-# Install plugin description and headers
+
 install(DIRECTORY include/
         DESTINATION include/)
 install(FILES plugins.xml
@@ -75,15 +89,16 @@ install(FILES plugins.xml
 
 # Export for downstream
 ament_export_include_directories(include)
-ament_export_libraries(
-  simple_goal_checker
-  simple_progress_checker
-  controller_server
-)
+ament_export_libraries(simple_goal_checker simple_progress_checker controller_server)
 ament_export_dependencies(
   rclcpp
+  rclcpp_components
   nav2_core
   nav2_drone_core
+  nav2_drone_util
+  pluginlib
+  geometry_msgs
+  nav2_msgs
 )
 
 ament_package()

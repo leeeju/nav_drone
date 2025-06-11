@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Compiler warnings
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR
+   CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
@@ -17,31 +18,41 @@ find_package(nav2_core REQUIRED)
 find_package(nav2_drone_core REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(behaviortree_cpp_v3 REQUIRED)
+find_package(nav2_drone_costmap_3d REQUIRED)
+find_package(nav2_drone_msgs REQUIRED)
 
-# Include directories
+# Include headers
 include_directories(
   include
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
 )
 
-# Package dependencies for ament
+# Declare ament package dependencies
 set(dependencies
   rclcpp
   nav2_core
   nav2_drone_core
   pluginlib
   behaviortree_cpp_v3
+  nav2_drone_costmap_3d
+  nav2_drone_msgs
 )
 
-# Build BT Navigator node
+# Build the BT navigator node
 add_executable(bt_navigator_node
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/bt_navigator.cpp)
-ament_target_dependencies(bt_navigator_node ${dependencies})
-
-# Install rules
-install(TARGETS bt_navigator_node
-  DESTINATION lib/${PROJECT_NAME}
+  src/bt_navigator.cpp
+)
+ament_target_dependencies(bt_navigator_node
+  ${dependencies}
 )
 
-# Export for downstream use
+# Installation rules
+install(
+  TARGETS bt_navigator_node
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+# Export dependencies downstream
 ament_export_dependencies(${dependencies})
 ament_package()
