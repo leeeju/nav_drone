@@ -1,5 +1,5 @@
 # Request
-geometry_msgs/PoseWithCovarianceStamped initial_pose  # Initial pose of the robot
+geometry_msgs/PoseWithCovarianceStamped initial_pose  # Initial pose of the drone
 
 ---
 # Response

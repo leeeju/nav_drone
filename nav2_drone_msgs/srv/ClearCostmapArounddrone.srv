@@ -1,0 +1,7 @@
+# Request
+float32 radius                     # Radius around the drone to clear
+
+---
+# Response
+bool success                       # True if clearing succeeded
+string message                     # Optional error or success message

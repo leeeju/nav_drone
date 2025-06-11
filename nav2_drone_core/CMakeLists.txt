@@ -1,57 +1,78 @@
-cmake_minimum_required(VERSION 3.8)
-project(nav2_drone_core)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+project(nav2_drone_core LANGUAGES CXX)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+# Use C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Compiler warnings
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# find dependencies
+# Find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclcpp_lifecycle REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(geometry_msgs REQUIRED)
+find_package(nav2_core REQUIRED)
 find_package(pluginlib REQUIRED)
-find_package(nav2_drone_msgs REQUIRED)
-find_package(tf2_ros REQUIRED)
-find_package(tf2 REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav2_drone_costmap_3d REQUIRED)
 
-# Specify dependencies
-set(dependencies
-  rclcpp
-  rclcpp_lifecycle
-  std_msgs
-  geometry_msgs
-  pluginlib
-  nav2_drone_msgs
-  tf2_ros
-  tf2
-)
-
-# Include headers
-include_directories(
-  include
-)
-
-# Add library (commented out because no source files are available)
-add_library(${PROJECT_NAME}_core
+# Library target
+add_library(${PROJECT_NAME} SHARED
   src/controller.cpp
-  src/planner.cpp
   src/goal_checker.cpp
+  src/planner.cpp
   src/progress_checker.cpp
 )
 
-# Link dependencies to the library (if library exists)
-# ament_target_dependencies(${PROJECT_NAME}_core ${dependencies})
+# Include directories for build and install
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
 
-# Install headers only for now
+# Link dependencies
+ament_target_dependencies(${PROJECT_NAME}
+  rclcpp
+  nav2_core
+  pluginlib
+  geometry_msgs
+)
+
+# Export plugin descriptions
+pluginlib_export_plugin_description_file(${PROJECT_NAME} plugins.xml)
+
+# Install headers
 install(
   DIRECTORY include/
   DESTINATION include/
 )
 
-# Ament package export
-ament_export_include_directories(include)
-ament_export_dependencies(${dependencies})
+# Install library
+install(
+  TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
 
+# Install plugin XML
+install(
+  FILES plugins.xml
+  DESTINATION share/${PROJECT_NAME}
+)
+
+# Export package configuration for downstream
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
+ament_export_dependencies(
+  rclcpp
+  nav2_core
+  pluginlib
+  geometry_msgs
+)
+
+# Finalize package
 ament_package()

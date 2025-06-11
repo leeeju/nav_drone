@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<library path="nav2_drone_costmap_3d">
+  <class
+    name="nav2_drone_costmap_3d/LayeredCostmap3D"
+    type="nav2_drone_costmap_3d::LayeredCostmap3D"
+    base_class_type="nav2_costmap_2d::Layer">
+    <description>3D layered costmap plugin</description>
+  </class>
+</library>

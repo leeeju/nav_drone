@@ -1,0 +1,5 @@
+<library path="nav2_drone_mpc_controller">
+  <class name="nav2_drone_mpc_controller/MPCController" type="nav2_drone_mpc_controller::MPCController" base_class_type="nav2_drone_core::Controller">
+    <description>Linear model predictive controller</description>
+  </class>
+</library>

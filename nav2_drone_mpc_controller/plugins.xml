@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<pluginlib>
+  <library path="nav2_drone_mpc_controller">
+    <class
+      name="nav2_drone_mpc_controller/MPCController"
+      type="nav2_drone_mpc_controller::MPCController"
+      base_class_type="nav2_core::Controller">
+      <description>Model Predictive Controller for drone waypoint tracking</description>
+    </class>
+  </library>
+</pluginlib>

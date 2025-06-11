@@ -1,111 +1,70 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.10)
 project(nav2_drone_costmap_3d)
 
-# Enable warnings for GCC and Clang
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+# Default to C++17
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
-# Find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclcpp_lifecycle REQUIRED)
-find_package(geometry_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(tf2 REQUIRED)
-find_package(tf2_ros REQUIRED)
-find_package(tf2_geometry_msgs REQUIRED)
-find_package(nav_msgs REQUIRED)
-find_package(nav2_drone_msgs REQUIRED)
-find_package(pluginlib REQUIRED)
-find_package(angles REQUIRED)
-find_package(message_filters REQUIRED)
+find_package(nav2_costmap_2d REQUIRED)
 find_package(octomap REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(nav2_drone_msgs REQUIRED)
 find_package(octomap_msgs REQUIRED)
-find_package(std_srvs REQUIRED)
 find_package(nav2_drone_util REQUIRED)
-# find_package(nav2_drone_core REQUIRED)
 
-# Library
-add_library(${PROJECT_NAME} SHARED
+
+add_library(${PROJECT_NAME}
   src/costmap_3d.cpp
-  src/costmap_server.cpp
   src/costmap_publisher.cpp
-)
-set(costmap_publisher_executable costmap_publisher)
-
-set(library_name ${costmap_publisher_executable}_lib)
-
-# Include directories
-target_include_directories(${PROJECT_NAME}
-  PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/nav2_drone_msgs/include>"
+  src/layered_costmap_3d.cpp
+  src/octomap_wrapper.cpp
 )
 
-include_directories(
-  include(${PROJECT_NAME})
-  include(nav2_drone_msgs)
-
-)
-
-# Link dependencies
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
-  rclcpp_lifecycle
-  geometry_msgs
-  sensor_msgs
-  std_msgs
-  tf2
-  tf2_ros
-  tf2_geometry_msgs
-  nav_msgs
-  nav2_drone_msgs
-  pluginlib
-  angles
-  message_filters
+  nav2_costmap_2d
   octomap
+  pluginlib
+  tf2_ros
+  nav2_drone_msgs
   octomap_msgs
-  std_srvs
   nav2_drone_util
-  # nav2_drone_core
 )
 
-# Link additional libraries
-# target_link_libraries(costmap_publisher
-#   ${library_name}
-# )
+target_include_directories(${PROJECT_NAME} PUBLIC
+  # This package's headers
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  # Include headers from nav2_drone_util (sibling package)
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../nav2_drone_util/include>
+  # Installed include path
+  $<INSTALL_INTERFACE:include>
+)
 
-# install(TARGETS
-#   costmap_publisher
-#   RUNTIME DESTINATION lib/${PROJECT_NAME}
-# )
-# add_executable(costmap_publisher src/costmap_publisher.cpp)
+# --------------------------------------------------------------------
+# 3) Export plugin description file
+# --------------------------------------------------------------------
+pluginlib_export_plugin_description_file(nav2_costmap_3d plugins.xml)
 
-# Install targets
+# --------------------------------------------------------------------
+# 4) Install headers and library
+# --------------------------------------------------------------------
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+
 install(
   TARGETS ${PROJECT_NAME}
-  EXPORT export_${PROJECT_NAME}
-  ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
-# Install headers
-install(
-  DIRECTORY
-  include
-  DESTINATION include/${PROJECT_NAME}
-)
-
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
-  add_executable(costmap_publisher src/costmap_publisher.cpp)
-  target_link_libraries(costmap_publisher ${PROJECT_NAME})
-endif()
-
-# Mark as ament package
+# --------------------------------------------------------------------
+# 5) Export package
+# --------------------------------------------------------------------
 ament_package()

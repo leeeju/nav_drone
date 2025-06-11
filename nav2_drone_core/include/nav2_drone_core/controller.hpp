@@ -47,8 +47,8 @@ public:
 
   /**
    * @brief Compute velocity commands for navigation based on the current pose and speed
-   * @param pose The current pose of the robot
-   * @param speed The current velocity of the robot
+   * @param pose The current pose of the drone
+   * @param speed The current velocity of the drone
    * @return A stamped velocity command
    */
   virtual geometry_msgs::msg::TwistStamped computeVelocityCommands(

@@ -13,14 +13,14 @@ def generate_launch_description():
         emulate_tty=True,
         parameters=[
             {'map_frame': 'map'},
-            {'robot_base_frame': 'base_link'},
+            {'drone_base_frame': 'base_link'},
             {'transform_tolerance': 0.1},
             {'lookahead_dist': 2.0},
             {'min_lookahead_dist': 0.8},
             {'max_lookahead_dist': 4.0},
             {'lookahead_time': 1.5},
             {'use_velocity_scaled_lookahead_dist': False},
-            {'robot_radius': 0.5},
+            {'drone_radius': 0.5},
             {'safety_radius': 0.3}
         ]
     )

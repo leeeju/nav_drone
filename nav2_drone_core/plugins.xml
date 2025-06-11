@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<library path="nav2_drone_core">
+  <class
+    name="nav2_drone_core/Planner"
+    type="nav2_drone_core::Planner"
+    base_class_type="nav2_drone_core::GlobalPlanner">
+    <description>Drone-specific global planner</description>
+  </class>
+  <class
+    name="nav2_drone_core/Controller"
+    type="nav2_drone_core::Controller"
+    base_class_type="nav2_drone_core::Controller">
+    <description>Drone-specific velocity controller</description>
+  </class>
+  <class
+    name="nav2_drone_core/GoalChecker"
+    type="nav2_drone_core::GoalChecker"
+    base_class_type="nav2_drone_core::GoalChecker">
+    <description>Drone-specific goal checker</description>
+  </class>
+  <class
+    name="nav2_drone_core/ProgressChecker"
+    type="nav2_drone_core::ProgressChecker"
+    base_class_type="nav2_drone_core::ProgressChecker">
+    <description>Drone-specific progress checker</description>
+  </class>
+</library>
