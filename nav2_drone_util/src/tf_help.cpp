@@ -8,10 +8,10 @@ namespace nav2_drone_util
 
 bool transformPose(
   const std::shared_ptr<tf2_ros::Buffer> tf,
-  const std::string frame,
+  const std::string & frame,
   const geometry_msgs::msg::PoseStamped & in_pose,
   geometry_msgs::msg::PoseStamped & out_pose,
-  rclcpp::Duration & transform_tolerance)
+  const rclcpp::Duration & transform_tolerance)
 {
   // If the input pose is already in the desired frame, no transformation is needed.
   if (in_pose.header.frame_id == frame) {
