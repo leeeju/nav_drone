@@ -12,6 +12,7 @@ NodeThread::NodeThread(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr nod
   executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
 
   // Start a thread to manage the executor and process callbacks
+  running_ = true;
   thread_ = std::make_unique<std::thread>(
     [&]()
     {
@@ -26,6 +27,7 @@ NodeThread::NodeThread(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr nod
         RCLCPP_ERROR(rclcpp::get_logger("nav2_drone_util"),
           "Unknown exception in NodeThread executor.");
       }
+      running_ = false;
     });
 }
 
@@ -33,6 +35,7 @@ NodeThread::NodeThread(rclcpp::executors::SingleThreadedExecutor::SharedPtr exec
 : executor_(executor)
 {
   // Start a thread to spin the provided executor
+  running_ = true;
   thread_ = std::make_unique<std::thread>(
     [&]()
     {
@@ -45,6 +48,7 @@ NodeThread::NodeThread(rclcpp::executors::SingleThreadedExecutor::SharedPtr exec
         RCLCPP_ERROR(rclcpp::get_logger("nav2_drone_util"),
           "Unknown exception in NodeThread executor spin.");
       }
+      running_ = false;
     });
 }
 
@@ -58,6 +62,23 @@ NodeThread::~NodeThread()
   if (thread_ && thread_->joinable()) {
     thread_->join();
   }
+  running_ = false;
+}
+
+bool NodeThread::is_running() const
+{
+  return running_;
+}
+
+void NodeThread::stop()
+{
+  if (executor_) {
+    executor_->cancel();
+  }
+  if (thread_ && thread_->joinable()) {
+    thread_->join();
+  }
+  running_ = false;
 }
 
 }  // namespace nav2_drone_util

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <thread>
+#include <atomic>
 #include "rclcpp/rclcpp.hpp"
 
 namespace nav2_drone_util
