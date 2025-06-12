@@ -1,63 +1,67 @@
-#pragma once
+#ifndef NAV2_DRONE_COSTMAP_3D_COSTMAP_PUBLISHER_HPP_
+#define NAV2_DRONE_COSTMAP_3D_COSTMAP_PUBLISHER_HPP_
 
 #include <memory>
-#include <rclcpp/rclcpp.hpp>
-#include <octomap_msgs/msg/octomap.hpp>
-#include "nav2_drone_costmap_3d/layered_costmap_3d.hpp"
+#include <mutex>
+#include <string>
+
+#include "rclcpp/rclcpp.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "octomap_msgs/msg/octomap.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "tf2_ros/transform_listener.h"
+#include "tf2_ros/buffer.h"
+#include "octomap/OcTree.h"
+
+#include "nav2_drone_costmap_3d/costmap_3d.hpp"
+#include "nav2_drone_msgs/msg/costmap_meta_data.hpp"
 
 namespace nav2_drone_costmap_3d
 {
 
 /**
- * @class CostmapPublisher
- * @brief ROS2 node to publish 3D costmap data as Octomap messages
+ * @brief Node publishing 3D costmap meta data derived from Octomap input.
  */
 class CostmapPublisher : public rclcpp::Node
 {
 public:
-  /**
-   * @brief Constructor, sets up publishers and timer
-   * @param options Node options for ROS2 component
-   */
-  CostmapPublisher(const rclcpp::NodeOptions & options)
-  : Node("costmap_publisher", options)
-  {
-    // Initialize layered costmap
-    layered_map_ = std::make_shared<LayeredCostmap3D>(get_parameter("resolution").as_int());
-
-    // Create Octomap publisher
-    octomap_pub_ = this->create_publisher<octomap_msgs::msg::Octomap>(
-      "~/octomap", rclcpp::SystemDefaultsQoS());
-
-    // Timer to periodically publish costmap
-    timer_ = this->create_wall_timer(
-      std::chrono::milliseconds(100),
-      std::bind(&CostmapPublisher::publishCallback, this));
-  }
+  explicit CostmapPublisher(const rclcpp::NodeOptions & options);
 
 private:
-  /// Shared pointer to the layered 3D costmap
-  std::shared_ptr<LayeredCostmap3D> layered_map_;
+  // Parameters
+  double lookahead_dist_;
+  double drone_radius_;
+  double safety_radius_;
+  double transform_tolerance_;
+  std::string map_frame_;
+  std::string drone_frame_;
 
-  /// ROS publisher for Octomap messages
-  rclcpp::Publisher<octomap_msgs::msg::Octomap>::SharedPtr octomap_pub_;
+  // Subscriptions and publications
+  rclcpp::Subscription<octomap_msgs::msg::Octomap>::SharedPtr octomap_sub_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+  rclcpp::Publisher<nav2_drone_msgs::msg::CostmapMetaData>::SharedPtr costmap_pub_;
+  rclcpp::TimerBase::SharedPtr publish_timer_;
 
-  /// Timer for periodic publication
-  rclcpp::TimerBase::SharedPtr timer_;
+  // TF2 utilities
+  std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
-  /**
-   * @brief Timer callback to publish the Octomap
-   */
-  void publishCallback()
-  {
-    auto msg = octomap_msgs::msg::Octomap();
-    // Convert layered_map_ to octomap and fill msg
-    // layered_map_->toOctomap(msg);  // Assume LayeredCostmap3D provides this
+  // Stored map data
+  std::shared_ptr<octomap::OcTree> octree_;
+  rclcpp::Time last_octomap_update_;
+  geometry_msgs::msg::Twist last_velocity_;
+  bool octomap_received_;
+  mutable std::mutex costmap_mutex_;
 
-    msg.header.stamp = now();
-    msg.header.frame_id = "map";
-    octomap_pub_->publish(msg);
-  }
+  Costmap3D costmap_;
+
+  // Internal callbacks
+  void handle_octomap(const octomap_msgs::msg::Octomap::SharedPtr msg);
+  void handle_odometry(const nav_msgs::msg::Odometry::SharedPtr msg);
+  void handle_timer();
+  bool get_drone_pose(geometry_msgs::msg::PoseStamped & pose) const;
 };
 
 }  // namespace nav2_drone_costmap_3d
+
+#endif  // NAV2_DRONE_COSTMAP_3D_COSTMAP_PUBLISHER_HPP_
