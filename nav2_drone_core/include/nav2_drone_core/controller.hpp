@@ -31,7 +31,7 @@ public:
   virtual void configure(
     const rclcpp::Node::SharedPtr parent,
     const std::string & name,
-    const std::shared_ptr<nav2_drone_costmap_3d::LayeredCostmap3D> & costmap) = 0;
+    const std::shared_ptr<nav2_drone_costmap_3d::CostmapPublisher> & costmap) = 0;
 
   /**
    * @brief Set the global path for the controller to follow
@@ -43,7 +43,7 @@ public:
    * @brief Update the costmap data to reflect the latest map changes
    * @param costmap Shared pointer to the updated costmap publisher
    */
-  virtual void updateMap(const std::shared_ptr<nav2_drone_costmap_3d::LayeredCostmap3D> & costmap) = 0;
+  virtual void updateMap(const std::shared_ptr<nav2_drone_costmap_3d::CostmapPublisher> & costmap) = 0;
 
   /**
    * @brief Compute velocity commands for navigation based on the current pose and speed

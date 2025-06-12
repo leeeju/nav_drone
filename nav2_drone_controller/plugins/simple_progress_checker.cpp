@@ -9,6 +9,7 @@
 #include "nav2_drone_util/node_utils.hpp"
 #include "nav2_drone_util/geometry_utils.hpp"
 #include "pluginlib/class_list_macros.hpp"
+#include "rcl_interfaces/msg/parameter_descriptor.hpp"
 
 using std::placeholders::_1;
 
@@ -24,10 +25,11 @@ void SimpleProgressChecker::initialize(
 
   clock_ = node->get_clock();
 
+  rcl_interfaces::msg::ParameterDescriptor desc;
   nav2_drone_util::declare_parameter_if_not_declared(
-    node, plugin_name + ".required_movement_radius", rclcpp::ParameterValue(0.5));
+    node, plugin_name + ".required_movement_radius", rclcpp::ParameterValue(0.5), desc);
   nav2_drone_util::declare_parameter_if_not_declared(
-    node, plugin_name + ".movement_time_allowance", rclcpp::ParameterValue(10.0));
+    node, plugin_name + ".movement_time_allowance", rclcpp::ParameterValue(10.0), desc);
   // Scale is set to 0 by default, so if it was not set otherwise, set to 0
   node->get_parameter_or(plugin_name + ".required_movement_radius", radius_, 0.5);
   double time_allowance_param = 0.0;

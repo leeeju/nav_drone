@@ -1,13 +1,20 @@
 # Goal
 nav_msgs/Path path              # Sequence of waypoints for the drone to follow
-float32 speed                   # Desired speed for navigation
+string controller_id            # Controller plugin to use
+string goal_checker_id          # Goal checker plugin to use
+
+int32 UNKNOWN=0                 # Unspecified error
+int32 TF_ERROR=1                # TF lookup failed
+int32 NO_VALID_CONTROL=2        # Controller unable to compute a valid command
+int32 FAILED_TO_MAKE_PROGRESS=3 # Failed to make progress towards goal
+int32 PATIENCE_EXCEEDED=4       # Exceeded patience timeout
+int32 INVALID_PATH=5            # Provided path is invalid
 
 ---
 # Result
-bool success                    # Whether the path was followed successfully
-string message                  # Optional message for debugging or failure
+int32 error_code                # Resulting error code, 0 if successful
 
 ---
 # Feedback
-float32 percentage_complete     # Percentage of the path completed
-geometry_msgs/PoseStamped current_pose  # Current pose of the drone
+float32 distance_to_goal        # Remaining distance to end of path
+float32 speed                   # Current speed of the drone

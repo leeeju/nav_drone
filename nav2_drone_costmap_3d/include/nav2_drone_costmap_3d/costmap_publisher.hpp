@@ -23,6 +23,12 @@ class CostmapPublisher : public rclcpp::Node
 public:
   explicit CostmapPublisher(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
+  bool isCurrent() const {return octomap_received_;}
+  bool getRobotPose(geometry_msgs::msg::PoseStamped & pose) const {return get_drone_pose(pose);} 
+  double getTransformTollerance() const {return transform_tolerance_;}
+  std::shared_ptr<tf2_ros::Buffer> getTfBuffer() {return tf_buffer_;}
+  std::string getGlobalFrameID() const {return map_frame_;}
+
 private:
   // Callback for incoming OCTOMAP messages
   void handle_octomap(const octomap_msgs::msg::Octomap::SharedPtr msg);

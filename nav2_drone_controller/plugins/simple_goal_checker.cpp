@@ -4,11 +4,12 @@
 #include <vector>
 #include "nav2_drone_controller/plugins/simple_goal_checker.hpp"
 #include "pluginlib/class_list_macros.hpp"
-//#include <angles/angles.h>
+#include <angles/angles.h>
 #include "nav2_drone_util/node_utils.hpp"
 #include "nav2_drone_util/geometry_utils.hpp"
 #include "nav2_drone_util/angle_utils.hpp"
 #include "tf2/utils.h"
+#include "rcl_interfaces/msg/parameter_descriptor.hpp"
 
 using std::placeholders::_1;
 
@@ -31,15 +32,16 @@ void SimpleGoalChecker::initialize(
   plugin_name_ = plugin_name;
   auto node = parent;
 
+  rcl_interfaces::msg::ParameterDescriptor desc;
   nav2_drone_util::declare_parameter_if_not_declared(
     node,
-    plugin_name + ".xy_goal_tolerance", rclcpp::ParameterValue(0.25));
+    plugin_name + ".xy_goal_tolerance", rclcpp::ParameterValue(0.25), desc);
   nav2_drone_util::declare_parameter_if_not_declared(
     node,
-    plugin_name + ".yaw_goal_tolerance", rclcpp::ParameterValue(0.25));
+    plugin_name + ".yaw_goal_tolerance", rclcpp::ParameterValue(0.25), desc);
   nav2_drone_util::declare_parameter_if_not_declared(
     node,
-    plugin_name + ".stateful", rclcpp::ParameterValue(true));
+    plugin_name + ".stateful", rclcpp::ParameterValue(true), desc);
 
   node->get_parameter(plugin_name + ".xy_goal_tolerance", xy_goal_tolerance_);
   node->get_parameter(plugin_name + ".yaw_goal_tolerance", yaw_goal_tolerance_);
@@ -75,7 +77,7 @@ bool SimpleGoalChecker::isGoalReached(
 //    tf2::getYaw(goal_pose.orientation),
 //    PI);
 
-  double dyaw = nav2_drone_util::shortest_angular_distance(
+  double dyaw = angles::shortest_angular_distance(
     tf2::getYaw(query_pose.orientation),
     tf2::getYaw(goal_pose.orientation));
   return fabs(dyaw) < yaw_goal_tolerance_;

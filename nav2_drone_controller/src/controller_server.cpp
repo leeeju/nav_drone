@@ -28,6 +28,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
+#include "rcl_interfaces/msg/parameter_descriptor.hpp"
 
 #include "nav2_drone_controller/controller_server.hpp"
 
@@ -52,8 +53,9 @@ ControllerServer::ControllerServer(const rclcpp::NodeOptions & options)
  //   default_types_{"nav_drone_pid_controller/PIDController", "nav_drone_regulated_pure_pursuit_controller/RegulatedPurePursuitController"}
 {
   // Declare and get parameters
+  rcl_interfaces::msg::ParameterDescriptor desc;
   nav2_drone_util::declare_parameter_if_not_declared(
-    this, "control_frequency", rclcpp::ParameterValue(10.0));   // Control frequency in Hz.  Must be bigger than 2 Hz
+    this, "control_frequency", rclcpp::ParameterValue(10.0), desc);   // Control frequency in Hz.  Must be bigger than 2 Hz
 
   this->declare_parameter("progress_checker_plugin", default_progress_checker_id_);
   this->declare_parameter("progress_checker_type", default_progress_checker_type_);
@@ -64,13 +66,13 @@ ControllerServer::ControllerServer(const rclcpp::NodeOptions & options)
   declare_parameter("controller_plugins", default_ids_);
   declare_parameter("controller_types", default_types_);
   nav2_drone_util::declare_parameter_if_not_declared(
-    this, "min_x_velocity_threshold", rclcpp::ParameterValue(0.0001));
+    this, "min_x_velocity_threshold", rclcpp::ParameterValue(0.0001), desc);
   nav2_drone_util::declare_parameter_if_not_declared(
-    this, "min_y_velocity_threshold", rclcpp::ParameterValue(0.0001));
+    this, "min_y_velocity_threshold", rclcpp::ParameterValue(0.0001), desc);
   nav2_drone_util::declare_parameter_if_not_declared(
-    this, "min_z_velocity_threshold", rclcpp::ParameterValue(0.0001));
+    this, "min_z_velocity_threshold", rclcpp::ParameterValue(0.0001), desc);
   nav2_drone_util::declare_parameter_if_not_declared(
-    this, "min_theta_velocity_threshold", rclcpp::ParameterValue(0.0001));
+    this, "min_theta_velocity_threshold", rclcpp::ParameterValue(0.0001), desc);
 
   this->get_parameter("control_frequency", controller_frequency_);
   this->get_parameter("min_x_velocity_threshold", min_x_velocity_threshold_);
@@ -84,8 +86,7 @@ ControllerServer::ControllerServer(const rclcpp::NodeOptions & options)
   this->get_parameter("goal_checker_types", goal_checker_types_);
 
   // The costmap node is used in the implementation of the controller
-  costmap_ros_ = std::make_shared<nav2_drone_costmap_3d::CostmapPublisher>(
-    "local_costmap", std::string{get_namespace()});
+  costmap_ros_ = std::make_shared<nav2_drone_costmap_3d::CostmapPublisher>();
   // Launch a thread to run the costmap node
   costmap_thread_ = std::make_unique<nav2_drone_util::NodeThread>(costmap_ros_);
 
@@ -226,7 +227,7 @@ rclcpp_action::GoalResponse ControllerServer::handle_goal(
     RCLCPP_ERROR(this->get_logger(), "Invalid path, Path is empty.  Rejecting request.");
     return rclcpp_action::GoalResponse::REJECT;
   }
-  RCLCPP_INFO(this->get_logger(), "Controller Server received request to follow %d waypoints", goal->path.poses.size());
+  RCLCPP_INFO(this->get_logger(), "Controller Server received request to follow %zu waypoints", goal->path.poses.size());
 
   if(server_mutex.try_lock()) {
     return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;

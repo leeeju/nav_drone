@@ -116,6 +116,32 @@ inline double calculate_path_length(const nav_msgs::msg::Path & path, size_t sta
 }
 
 /**
+ * @brief Find index of path pose closest to the current pose
+ * @param pose Current pose
+ * @param path Global path
+ * @return size_t Index of closest pose
+ */
+inline size_t find_closest_goal_idx(
+  const geometry_msgs::msg::PoseStamped & pose,
+  const nav_msgs::msg::Path & path)
+{
+  if (path.poses.empty()) {
+    return 0;
+  }
+
+  size_t closest_idx = 0;
+  double min_dist = euclidean_distance(pose, path.poses[0], true);
+  for (size_t i = 1; i < path.poses.size(); ++i) {
+    double dist = euclidean_distance(pose, path.poses[i], true);
+    if (dist < min_dist) {
+      closest_idx = i;
+      min_dist = dist;
+    }
+  }
+  return closest_idx;
+}
+
+/**
  * @brief Finds the intersection of a sphere and a line segment
  * @param p1 First endpoint of the segment
  * @param p2 Second endpoint of the segment
