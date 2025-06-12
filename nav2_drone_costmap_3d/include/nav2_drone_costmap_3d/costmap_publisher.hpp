@@ -9,18 +9,18 @@ namespace nav2_drone_costmap_3d
 {
 
 /**
- * @class CostmapPublisherNode
+ * @class CostmapPublisher
  * @brief ROS2 node to publish 3D costmap data as Octomap messages
  */
-class CostmapPublisherNode : public rclcpp::Node
+class CostmapPublisher : public rclcpp::Node
 {
 public:
   /**
    * @brief Constructor, sets up publishers and timer
    * @param options Node options for ROS2 component
    */
-  CostmapPublisherNode(const rclcpp::NodeOptions & options)
-  : Node("costmap_publisher_node", options)
+  CostmapPublisher(const rclcpp::NodeOptions & options)
+  : Node("costmap_publisher", options)
   {
     // Initialize layered costmap
     layered_map_ = std::make_shared<LayeredCostmap3D>(get_parameter("resolution").as_int());
@@ -32,7 +32,7 @@ public:
     // Timer to periodically publish costmap
     timer_ = this->create_wall_timer(
       std::chrono::milliseconds(100),
-      std::bind(&CostmapPublisherNode::publishCallback, this));
+      std::bind(&CostmapPublisher::publishCallback, this));
   }
 
 private:
