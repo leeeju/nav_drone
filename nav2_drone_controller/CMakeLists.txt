@@ -21,6 +21,7 @@ find_package(nav2_drone_costmap_3d REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav2_drone_msgs REQUIRED)  # Added to include costmap metadata
+find_package(octomap_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
 find_package(angles REQUIRED)
 
@@ -47,6 +48,7 @@ ament_target_dependencies(simple_goal_checker
   geometry_msgs
   nav2_drone_msgs    # Added for CostmapMetaData
   angles
+  octomap_msgs
 )
 
 # Plugins: simple progress checker
@@ -66,6 +68,7 @@ ament_target_dependencies(simple_progress_checker
   pluginlib
   geometry_msgs
   nav2_drone_msgs   # Added for CostmapMetaData
+  octomap_msgs
 )
 
 # Export plugin descriptions
@@ -89,6 +92,7 @@ ament_target_dependencies(controller_server
   nav2_msgs
   geometry_msgs
   nav2_drone_msgs  # Added for CostmapMetaData
+  octomap_msgs
 )
 
 # Register as rclcpp component
@@ -128,6 +132,7 @@ ament_export_dependencies(
   geometry_msgs
   nav2_msgs
   angles
+  octomap_msgs
 )
 
 ament_package()

@@ -1,72 +1,68 @@
 #ifndef NAV2_DRONE_COSTMAP_3D__COSTMAP_SERVER_HPP_
 #define NAV2_DRONE_COSTMAP_3D__COSTMAP_SERVER_HPP_
 
-#include <memory>
-#include <mutex>
 #include <string>
-
-#include "rclcpp/rclcpp.hpp"
-#include "nav_msgs/msg/odometry.hpp"
 #include "nav2_costmap_2d/costmap_layer.hpp"
-#include "nav2_costmap_2d/layered_costmap.hpp"
+#include "layered_costmap_3d.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 namespace nav2_drone_costmap_3d
 {
 
 /**
- * @class CostmapPublisher
- * @brief 3D OctoMap-based costmap layer for drone navigation
+ * @class CostmapServer
+ * @brief 3D costmap layer for drones, combining 2D CostmapLayer interface
+ *        with 3D layered map representation
  */
-class CostmapPublisher : public nav2_costmap_2d::CostmapLayer,
-                        public std::enable_shared_from_this<CostmapPublisher>
+class CostmapServer : public nav2_costmap_2d::CostmapLayer,
+                      public LayeredCostmap3D
 {
 public:
-  CostmapPublisher();
-  ~CostmapPublisher() override;
+  /**
+   * @brief Default constructor
+   */
+  CostmapServer();
 
   /**
-   * @brief Lifecycle initialization callback
+   * @brief Destructor
+   */
+  virtual ~CostmapServer() = default;
+
+  /**
+   * @brief Initialize the costmap layer
+   * @param parent pointer to parent ROS node
    */
   void onInitialize() override;
 
   /**
-   * @brief Reset the layer state
+   * @brief Reset the entire costmap to empty state
    */
   void reset() override;
 
   /**
-   * @brief Update the bounding box for costmap updates
+   * @brief Update the costmap with the latest sensor data
    */
   void updateBounds(
-    double robot_x, double robot_y, double robot_yaw,
-    double* min_x, double* min_y,
-    double* max_x, double* max_y) override;
+    double robot_x,
+    double robot_y,
+    double robot_yaw,
+    double & min_x,
+    double & min_y,
+    double & max_x,
+    double & max_y) override;
 
   /**
-   * @brief Update the cost values within the bounding box
+   * @brief Populate the master costmap based on this layer's data
    */
   void updateCosts(
-    nav2_costmap_2d::Costmap2D& master_grid,
-    int min_i, int min_j,
-    int max_i, int max_j) override;
+    nav2_costmap_2d::Costmap2D & master_grid,
+    int min_i,
+    int min_j,
+    int max_i,
+    int max_j) override;
 
 private:
-  // Parameter for odometry topic
-  std::string odom_topic_;
-
-  // Subscription to odometry
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
-
-  // Mutex for shared data
-  std::mutex mutex_;
-
-  // Last received odometry message
-  nav_msgs::msg::Odometry::SharedPtr last_odom_;
-
-  /**
-   * @brief Odometry callback
-   */
-  void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+  rclcpp::Logger logger_{rclcpp::get_logger("costmap_3d")};
 };
 
 }  // namespace nav2_drone_costmap_3d

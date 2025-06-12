@@ -3,31 +3,33 @@
 #include <cmath>
 #include <angles/angles.h>
 
-namespace nav2_drone_util {
-
+namespace nav2_drone_util
+{
 /**
- * @brief Calculate the angle between a line defined by two points and the coordinate axes.
- * Result is in radians.
+ * @brief Calculate the angle between two points relative to the x-axis.
  *
  * @param x1 The x coordinate of the first point.
  * @param y1 The y coordinate of the first point.
  * @param x2 The x coordinate of the second point.
  * @param y2 The y coordinate of the second point.
- * @return The angle (in radians) from (x1, y1) to (x2, y2), measured relative to the x-axis.
+ * @return The angle in radians from (x1, y1) to (x2, y2).
  */
-double angle(
+inline double angle(
   const double x1,
   const double y1,
   const double x2,
-  const double y2);
+  const double y2)
+{
+  return std::atan2(y2 - y1, x2 - x1);
+}
 
 /**
- * @brief Compute the shortest angular distance between two angles (radians).
- * Wraps around at 2π to provide the minimal signed angle difference.
+ * @brief Compute the shortest signed angular distance between two angles.
+ * Wraps the result into [-pi, pi].
  *
- * @param from Starting angle (radians).
- * @param to Ending angle (radians).
- * @return The minimal signed angular difference (radians) in [-π, π].
+ * @param from Starting angle in radians.
+ * @param to Ending angle in radians.
+ * @return The minimal signed angular difference in radians.
  */
 inline double shortest_angular_distance(
   const double from,

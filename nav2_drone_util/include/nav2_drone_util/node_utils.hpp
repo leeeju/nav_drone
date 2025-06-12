@@ -7,8 +7,15 @@
 
 namespace nav2_drone_util
 {
-
-// Declare parameter with explicit descriptor
+/**
+ * @brief Declare a parameter on the node if not already declared, with explicit descriptor.
+ *
+ * @tparam NodeT Node pointer or shared_ptr type supporting declare_parameter
+ * @param node Node instance to declare parameter on
+ * @param name Name of the parameter
+ * @param default_value Default value to declare
+ * @param descriptor Parameter descriptor for additional metadata
+ */
 template<class NodeT>
 inline void declare_parameter_if_not_declared(
   NodeT node,
@@ -21,7 +28,14 @@ inline void declare_parameter_if_not_declared(
   }
 }
 
-// Overload without ParameterDescriptor for 3-argument calls
+/**
+ * @brief Declare a parameter on the node if not already declared, using default descriptor.
+ *
+ * @tparam NodeT Node pointer or shared_ptr type supporting declare_parameter
+ * @param node Node instance to declare parameter on
+ * @param name Name of the parameter
+ * @param default_value Default value to declare
+ */
 template<class NodeT>
 inline void declare_parameter_if_not_declared(
   NodeT node,
@@ -32,7 +46,14 @@ inline void declare_parameter_if_not_declared(
   declare_parameter_if_not_declared(node, name, default_value, descriptor);
 }
 
-// Retrieve plugin type parameter
+/**
+ * @brief Retrieve a string parameter for plugin type from the node.
+ *
+ * @tparam NodeT Node pointer or shared_ptr type supporting get_parameter
+ * @param node Node instance to query parameter
+ * @param name Name of the parameter
+ * @return The parameter value as string
+ */
 template<class NodeT>
 inline std::string get_plugin_type_param(
   NodeT node,

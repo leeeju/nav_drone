@@ -1,216 +1,174 @@
-// Copyright (c) 2023 Eric Slaghuis
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-#include <memory>
-#include <string>
-#include <thread>
-#include <unordered_map>
-#include <vector>
-#include <mutex>
-
-#include "nav2_drone_util/angle_utils.hpp"
-
-#include "nav2_drone_core/exceptions.hpp"
-#include "nav2_drone_core/controller_exceptions.hpp"
-
-#include "nav2_drone_core/controller.hpp"
-#include "nav2_drone_core/progress_checker.hpp"
-#include "nav2_drone_core/goal_checker.hpp"
+#ifndef NAV2_DRONE_CONTROLLER__CONTROLLER_SERVER_HPP_
+#define NAV2_DRONE_CONTROLLER__CONTROLLER_SERVER_HPP_
 
 #include "nav2_drone_costmap_3d/costmap_publisher.hpp"
-
-#include "nav2_drone_msgs/action/follow_path.hpp"
-#include "nav2_drone_util/node_utils.hpp"
-#include "nav2_drone_util/node_thread.hpp"
-#include "nav2_drone_util/drone_utils.hpp"
-#include "nav2_drone_util/visibility_control.h"
+#include "nav2_drone_costmap_3d/layered_costmap_3d.hpp"
+#include "nav2_drone_util/path_utils.hpp"
 #include "nav2_drone_util/tf_help.hpp"
-
-#include <pluginlib/class_list_macros.hpp>
 #include <pluginlib/class_loader.hpp>
+#include <memory>
+#include <string>
+#include <vector>
+#include "rclcpp/rclcpp.hpp"
+
+using namespace std::chrono_literals;
 
 namespace nav2_drone_controller
 {
 
-class ProgressChecker;
-
-class ControllerServer : public rclcpp::Node
+ControllerServer::ControllerServer(const rclcpp::NodeOptions & options)
+: Node("controller_server", options),
+  progress_checker_loader_("nav2_drone_core", "nav2_drone_core::ProgressChecker"),
+  goal_checker_loader_("nav2_drone_core", "nav2_drone_core::GoalChecker"),
+  lp_loader_("nav2_drone_core", "nav2_drone_core::Controller")
 {
-public:
-  using ControllerMap = std::unordered_map<std::string, nav2_drone_core::Controller::Ptr>;
-  using GoalCheckerMap = std::unordered_map<std::string, nav2_drone_core::GoalChecker::Ptr>;
+  init();
+}
 
-  NAV_DRONE_PUBLIC
-  explicit ControllerServer(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
-   /**
-   * @brief Destructor for nav2_drone_controller::ControllerServer
-   */
-  ~ControllerServer();
-protected:
-  /**
-   * @brief Initialises member variables
-   *
-   * Initialises controller, costmap, velocity publisher and follow path action
-   * server
-   */
-  void init();
+ControllerServer::~ControllerServer() = default;
 
-  using FollowPath = nav2_drone_msgs::action::FollowPath;
-  using GoalHandleFollowPath = rclcpp_action::ServerGoalHandle<FollowPath>;
+void ControllerServer::init()
+{
+  // Declare and get resolution parameter
+  declare_parameter_if_not_declared(shared_from_this(), "resolution", rclcpp::ParameterValue(5));
+  int resolution = get_parameter("resolution").as_int();
 
- // Our action server implements the FollowPath action
-  rclcpp_action::Server<FollowPath>::SharedPtr action_server_;
+  // Create layered costmap
+  layered_map_ = std::make_shared<LayeredCostmap3D>(resolution);
 
-  rclcpp_action::GoalResponse handle_goal(
-    const rclcpp_action::GoalUUID & uuid,
-    std::shared_ptr<const FollowPath::Goal> goal);
+  // Start costmap publisher node in its own thread
+  costmap_publisher_node_ = std::make_shared<CostmapPublisherNode>(rclcpp::NodeOptions());
+  costmap_thread_ = std::make_unique<nav2_drone_util::NodeThread>(costmap_publisher_node_);
 
-  rclcpp_action::CancelResponse handle_cancel(
-    const std::shared_ptr<GoalHandleFollowPath> goal_handle);
+  // Velocity publisher
+  publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
 
-  void handle_accepted(const std::shared_ptr<GoalHandleFollowPath> goal_handle);
+  // Odometry subscription
+  odom_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
+    "odom", 10,
+    std::bind(&ControllerServer::odom_callback, this, std::placeholders::_1));
 
-  /**
-   * @brief FollowPath action server callback. Handles action server updates and
-   * spins server until goal is reached
-   *
-   * Provides global path to controller received from action client. Twist
-   * velocities for the robot are calculated and published using controller at
-   * the specified rate till the goal is reached.
-   * @throw nav2_drone_core::PlannerException
-   */
-  void execute(const std::shared_ptr<GoalHandleFollowPath> goal_handle);
+  // Action server
+  action_server_ = rclcpp_action::create_server<FollowPath>(
+    get_node_base_interface(),
+    get_node_clock_interface(),
+    get_node_logging_interface(),
+    get_node_waitables_interface(),
+    "follow_path",
+    std::bind(&ControllerServer::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
+    std::bind(&ControllerServer::handle_cancel, this, std::placeholders::_1),
+    std::bind(&ControllerServer::handle_accepted, this, std::placeholders::_1));
 
-    /**
-   * @brief Find the valid controller ID name for the given request
-   *
-   * @param c_name The requested controller name
-   * @param name Reference to the name to use for control if any valid available
-   * @return bool Whether it found a valid controller to use
-   */
-  bool findControllerId(
-    const std::string & c_name,
-    std::string & current_controller);
+  // Load controller plugins
+  node_thread_comments(); // placeholder for loading LP, GC, PC plugins
+}
 
-  /**
-   * @brief Find the valid goal checker ID name for the specified parameter
-   *
-   * @param c_name The goal checker name
-   * @param name Reference to the name to use for goal checking if any valid available
-   * @return bool Whether it found a valid goal checker to use
-   */
-  bool findGoalCheckerId(
-    const std::string & c_name,
-   std::string & current_goal_checker);
+rclcpp_action::GoalResponse ControllerServer::handle_goal(
+  const rclcpp_action::GoalUUID & uuid,
+  std::shared_ptr<const FollowPath::Goal> goal)
+{
+  (void)uuid;
+  RCLCPP_INFO(get_logger(), "Received FollowPath goal request");
+  // Always accept
+  return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+}
 
-  /**
-   * @brief Calls velocity publisher to publish zero velocity
-   */
-  bool publishZeroVelocity();
+rclcpp_action::CancelResponse ControllerServer::handle_cancel(
+  const std::shared_ptr<GoalHandleFollowPath> goal_handle)
+{
+  (void)goal_handle;
+  RCLCPP_INFO(get_logger(), "Received request to cancel goal");
+  return rclcpp_action::CancelResponse::ACCEPT;
+}
 
-  /**
-   * @brief Checks if goal is reached
-   * @return true or false
-   */
-  bool getRobotPose(geometry_msgs::msg::PoseStamped & pose);
+void ControllerServer::handle_accepted(
+  const std::shared_ptr<GoalHandleFollowPath> goal_handle)
+{
+  std::thread(&ControllerServer::execute, this, goal_handle).detach();
+}
 
-  /**
-   * @brief Checks if goal is reached
-   * @return true or false
-   */
-  bool isGoalReached();
+void ControllerServer::execute(
+  const std::shared_ptr<GoalHandleFollowPath> goal_handle)
+{
+  RCLCPP_INFO(get_logger(), "Executing goal");
+  auto goal = goal_handle->get_goal();
+  // Get path
+  auto path = goal->path;
+  end_pose_ = path.back();
 
-    /**
-   * @brief get the thresholded velocity
-   * @param velocity The current velocity from odometry
-   * @param threshold The minimum velocity to return non-zero
-   * @return double velocity value
-   */
-  double getThresholdedVelocity(double velocity, double threshold)
-  {
-    return (std::abs(velocity) > threshold) ? velocity : 0.0;
+  rclcpp::Rate rate(controller_frequency_);
+  while (rclcpp::ok()) {
+    geometry_msgs::msg::PoseStamped current_pose;
+    if (!getRobotPose(current_pose)) {
+      RCLCPP_WARN(get_logger(), "Could not get robot pose");
+      continue;
+    }
+
+    if (isGoalReached()) {
+      publishZeroVelocity();
+      goal_handle->succeed(result_);
+      return;
+    }
+
+    // Compute velocity command
+    auto twist = controllers_[current_controller_]->computeVelocityCommand(
+      path, current_pose, layered_map_);
+    auto twist_thresh = getThresholdedTwist(twist);
+    publisher_->publish(twist_thresh);
+
+    rate.sleep();
   }
+}
 
-   /**
-   * @brief get the thresholded Twist
-   * @param Twist The current Twist from odometry
-   * @return Twist Twist after thresholds applied
-   */
-  geometry_msgs::msg::Twist getThresholdedTwist(const geometry_msgs::msg::Twist & twist)
-  {
-    geometry_msgs::msg::Twist twist_thresh;
-    twist_thresh.linear.x = getThresholdedVelocity(twist.linear.x, min_x_velocity_threshold_);
-    twist_thresh.linear.y = getThresholdedVelocity(twist.linear.y, min_y_velocity_threshold_);
-    twist_thresh.linear.z = getThresholdedVelocity(twist.linear.z, min_y_velocity_threshold_);
-    twist_thresh.angular.z = getThresholdedVelocity(twist.angular.z, min_theta_velocity_threshold_);
-    return twist_thresh;
-  }
+bool ControllerServer::publishZeroVelocity()
+{
+  auto zero = geometry_msgs::msg::Twist();
+  publisher_->publish(zero);
+  return true;
+}
 
-  // The controller needs a costmap node
-  std::shared_ptr<nav2_drone_costmap_3d::CostmapPublisher> costmap_ros_;
-  std::unique_ptr<nav2_drone_util::NodeThread> costmap_thread_;
+bool ControllerServer::getRobotPose(
+  geometry_msgs::msg::PoseStamped & pose)
+{
+  return nav2_drone_util::getRobotPose(pose,
+    costmap_publisher_node_->get_node_base_interface(),
+    "map");
+}
 
-  //Publishers and Subscribers
-  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher_;
-  void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg);
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscription_;
+bool ControllerServer::isGoalReached()
+{
+  geometry_msgs::msg::PoseStamped current_pose;
+  getRobotPose(current_pose);
+  auto gc = goal_checkers_[current_goal_checker_];
+  return gc->isGoalReached(current_pose, end_pose_, last_velocity_.twist);
+}
 
-  // Progress Checker Plugin
-  pluginlib::ClassLoader<nav2_drone_core::ProgressChecker> progress_checker_loader_;
-  nav2_drone_core::ProgressChecker::Ptr progress_checker_;
-  std::string default_progress_checker_id_;
-  std::string default_progress_checker_type_;
-  std::string progress_checker_id_;
-  std::string progress_checker_type_;
+void ControllerServer::odom_callback(
+  const nav_msgs::msg::Odometry::SharedPtr msg)
+{
+  last_velocity_.twist = msg->twist.twist;
+}
 
-  // Goal Checker Plugin
-  pluginlib::ClassLoader<nav2_drone_core::GoalChecker> goal_checker_loader_;
-  GoalCheckerMap goal_checkers_;
-  std::vector<std::string> default_goal_checker_ids_;
-  std::vector<std::string> default_goal_checker_types_;
-  std::vector<std::string> goal_checker_ids_;
-  std::vector<std::string> goal_checker_types_;
-  std::string goal_checker_ids_concat_, current_goal_checker_;
+bool ControllerServer::findControllerId(
+  const std::string & c_name,
+  std::string & name)
+{
+  // Implementation stub
+  name = default_ids_.front();
+  return true;
+}
 
-  // Controller plugins
-  pluginlib::ClassLoader<nav2_drone_core::Controller> lp_loader_;
-  ControllerMap controllers_;
-  std::vector<std::string> default_ids_;
-  std::vector<std::string> default_types_;
-  std::vector<std::string> controller_ids_;
-  std::vector<std::string> controller_types_;
-  std::string controller_ids_concat_, current_controller_;
-
-  // Variables for node paramaters
-  double controller_frequency_;
-  double min_x_velocity_threshold_;
-  double min_y_velocity_threshold_;
-  double min_z_velocity_threshold_;
-  double min_theta_velocity_threshold_;
-
-  double max_controller_duration_;
-
-  // Utility global variales
-  std::mutex server_mutex;   // Only allow one Action Server to address the drone at a time
-  geometry_msgs::msg::TwistStamped last_velocity_;
-  geometry_msgs::msg::PoseStamped end_pose_;
-
-  rclcpp::Clock steady_clock_{RCL_STEADY_TIME};
-  rclcpp::TimerBase::SharedPtr one_off_timer_;
-
-private:
-
-};  // class ControllerServer
+bool ControllerServer::findGoalCheckerId(
+  const std::string & c_name,
+  std::string & name)
+{
+  // Implementation stub
+  name = default_goal_checker_ids_.front();
+  return true;
+}
 
 }  // namespace nav2_drone_controller
+
+PLUGINLIB_EXPORT_CLASS(
+  nav2_drone_controller::ControllerServer,
+  rclcpp::Node)

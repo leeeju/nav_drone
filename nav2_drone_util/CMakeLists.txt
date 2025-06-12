@@ -11,6 +11,8 @@ find_package(rclcpp REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(angles REQUIRED)               # Added for angular utilities
+find_package(geometry_msgs REQUIRED)        # Added for PoseStamped
 
 add_library(${PROJECT_NAME}
   src/angle_utils.cpp
@@ -25,6 +27,8 @@ ament_target_dependencies(${PROJECT_NAME}
   tf2
   tf2_ros
   tf2_geometry_msgs
+  angles                                    # angular utilities
+  geometry_msgs                             # PoseStamped
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -51,6 +55,8 @@ ament_export_dependencies(
   tf2
   tf2_ros
   tf2_geometry_msgs
+  angles                                    # angular utilities
+  geometry_msgs                             # PoseStamped
 )
 
 ament_package()
