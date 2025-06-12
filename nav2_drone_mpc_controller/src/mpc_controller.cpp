@@ -29,7 +29,7 @@
 #include "nav2_drone_core/exceptions.hpp"
 #include "nav2_drone_util/node_utils.hpp"
 #include "nav2_drone_util/angle_utils.hpp"
-#include "nav2_drone_util/robot_utils.hpp"
+#include "nav2_drone_util/drone_utils.hpp"
 
 #include "pluginlib/class_list_macros.hpp"
 

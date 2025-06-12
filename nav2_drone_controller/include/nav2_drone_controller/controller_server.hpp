@@ -37,7 +37,7 @@ void ControllerServer::init()
   layered_map_ = std::make_shared<LayeredCostmap3D>(resolution);
 
   // Start costmap publisher node in its own thread
-  costmap_publisher_node_ = std::make_shared<CostmapPublisherNode>(rclcpp::NodeOptions());
+  costmap_publisher_node_ = std::make_shared<CostmapPublisher>(rclcpp::NodeOptions());
   costmap_thread_ = std::make_unique<nav2_drone_util::NodeThread>(costmap_publisher_node_);
 
   // Velocity publisher
