@@ -4,7 +4,7 @@
   <name>nav2_drone_util</name>
   <version>0.0.0</version>
   <description>Utility package for nav2_drone</description>
-  <maintainer email="02stu4@gmail.com">turtle</maintainer>
+  <maintainer email="02stu4@gmail.com">leejuhyun</maintainer>
   <license>Apache 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

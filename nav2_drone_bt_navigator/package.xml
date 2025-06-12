@@ -4,8 +4,8 @@
   <name>nav2_drone_bt_navigator</name>
   <version>1.0.0</version>
   <description>Behavior Tree Navigation Server for the Nav Drone Stack</description>
-  <maintainer email="02stu4@gmail.com">leeeju</maintainer>
-  <license>Apache License 2.0</license>
+  <maintainer email="02stu4@gmail.com">leejuhyun</maintainer>
+  <license>Apache 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

@@ -4,8 +4,8 @@
   <name>nav2_drone_controller</name>
   <version>3.1.0</version>
   <description>Controller Server for the Nav Drone Stack</description>
-  <maintainer email="02stu4@gmail.com">leeeju</maintainer>
-  <license>Apache Licence 2.0</license>
+  <maintainer email="02stu4@gmail.com">leejuhyun</maintainer>
+  <license>Apache 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

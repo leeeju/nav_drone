@@ -1,19 +1,14 @@
 #ifndef NAV2_DRONE_CONTROLLER__CONTROLLER_SERVER_HPP_
 #define NAV2_DRONE_CONTROLLER__CONTROLLER_SERVER_HPP_
 
-// Copyright (c) 2023 Eric Slaghuis
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+#include "nav2_drone_core/exceptions.hpp"
+#include "nav2_drone_core/controller.hpp"
+#include "nav2_drone_util/angle_utils.hpp"
+#include "nav2_drone_core/goal_checker.hpp"
+#include "nav2_drone_core/progress_checker.hpp"
+#include "nav2_drone_core/controller_exceptions.hpp"
+#include "nav2_drone_costmap_3d/costmap_publisher.hpp"
+
 
 #include <memory>
 #include <string>
@@ -21,18 +16,6 @@
 #include <unordered_map>
 #include <vector>
 #include <mutex>
-
-#include "nav2_drone_util/angle_utils.hpp"
-
-#include "nav2_drone_core/exceptions.hpp"
-#include "nav2_drone_core/controller_exceptions.hpp"
-
-#include "nav2_drone_core/controller.hpp"
-#include "nav2_drone_core/progress_checker.hpp"
-#include "nav2_drone_core/goal_checker.hpp"
-
-#include "nav2_drone_costmap_3d/costmap_publisher.hpp"
-
 
 #include <pluginlib/class_list_macros.hpp>
 #include <pluginlib/class_loader.hpp>

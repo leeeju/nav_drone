@@ -1,27 +1,3 @@
-// Copyright (c) 2021, 2022 Eric Slaghuis
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-/* **********************************************************************
- * An Action Server Node that forms the main interface to the navigation
- * stack.  It executes a behaviour tree specified in the Action Server
- * goal (xml file name).  The action server serves AsyncActionNodes that
- * call Planner, Controller and Recovery Action Servers and Simple Services
- * to move the drone safely in 3D space.
- *
- * Transform listener tf2 for odom->base_link transforms.
- * **********************************************************************/
-
 #include <functional>
 #include <memory>
 #include <thread>

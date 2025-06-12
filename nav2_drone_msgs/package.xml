@@ -3,8 +3,8 @@
   <name>nav2_drone_msgs</name>
   <version>0.0.0</version>
   <description>Shared messages/services/actions for drone Nav2_PX4 integration</description>
-  <maintainer email="02stu4@gmail.com">leeeju</maintainer>
-  <license>Apache-2.0</license>
+  <maintainer email="02stu4@gmail.com">leejuhyun</maintainer>
+  <license>Apache 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>rosidl_default_generators</buildtool_depend>

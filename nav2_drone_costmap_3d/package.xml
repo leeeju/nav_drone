@@ -4,8 +4,8 @@
   <name>nav2_drone_costmap_3d</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="02stu4@gmail.com">leeeju</maintainer>
-  <license>TODO: License declaration</license>
+  <maintainer email="02stu4@gmail.com">leejuhyun</maintainer>
+  <license>Apache 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
