@@ -3,9 +3,9 @@
 #include <string>
 #include <memory>
 #include <vector>
-//#include "nav_2d_utils/conversions.hpp"
+
 #include "geometry_msgs/msg/pose_stamped.hpp"
-//#include "geometry_msgs/msg/pose2_d.hpp"
+
 #include "nav2_drone_util/node_utils.hpp"
 #include "nav2_drone_util/geometry_utils.hpp"
 #include "pluginlib/class_list_macros.hpp"

@@ -1,5 +1,5 @@
-#ifndef nav2_drone_util__GEOMETRY_UTILS_HPP_
-#define nav2_drone_util__GEOMETRY_UTILS_HPP_
+#ifndef NAV2_DRONE_UTIL__GEOMETRY_UTILS_HPP_
+#define NAV2_DRONE_UTIL__GEOMETRY_UTILS_HPP_
 
 #include <cmath>
 #include <stdexcept>

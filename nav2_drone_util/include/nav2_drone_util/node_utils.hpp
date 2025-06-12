@@ -8,6 +8,7 @@
 namespace nav2_drone_util
 {
 
+// Declare parameter with explicit descriptor
 template<class NodeT>
 inline void declare_parameter_if_not_declared(
   NodeT node,
@@ -20,6 +21,18 @@ inline void declare_parameter_if_not_declared(
   }
 }
 
+// Overload without ParameterDescriptor for 3-argument calls
+template<class NodeT>
+inline void declare_parameter_if_not_declared(
+  NodeT node,
+  const std::string & name,
+  const rclcpp::ParameterValue & default_value)
+{
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
+  declare_parameter_if_not_declared(node, name, default_value, descriptor);
+}
+
+// Retrieve plugin type parameter
 template<class NodeT>
 inline std::string get_plugin_type_param(
   NodeT node,

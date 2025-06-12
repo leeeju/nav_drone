@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(nav2_drone_util)
 
 # Default to C++17
@@ -42,6 +42,15 @@ install(
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
+)
+
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
+ament_export_dependencies(
+  rclcpp
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
 )
 
 ament_package()

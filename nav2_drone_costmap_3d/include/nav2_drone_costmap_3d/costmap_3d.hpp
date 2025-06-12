@@ -1,59 +1,69 @@
+#ifndef NAV2_DRONE_COSTMAP_3D_COSTMAP_3D_HPP_
+#define NAV2_DRONE_COSTMAP_3D_COSTMAP_3D_HPP_
+
 #pragma once
 
+#include <float.h>
+#include <math.h>
+#include <Eigen/Dense>
 #include <vector>
 #include <string>
+#include "nav2_drone_msgs/msg/costmap_meta_data.hpp"
 #include <geometry_msgs/msg/pose_stamped.hpp>
-#include <nav2_drone_msgs/msg/costmap_meta_data.hpp>
 
 namespace nav2_drone_costmap_3d {
 
-/**
- * @class Costmap3D
- * @brief 3D costmap representation with metadata and raw data storage.
- */
-class Costmap3D
-{
-public:
-  /**
-   * @brief Default constructor
-   */
+const int ALPHA_RES = 6;
+const int GRID_LENGTH_Z = 360 / ALPHA_RES;
+const int GRID_LENGTH_E = 180 / ALPHA_RES;
+
+class Costmap3D {
+  int resolution_;
+  int z_dim_;
+  int e_dim_;
+  Eigen::MatrixXf weight_;
+
+  nav2_drone_msgs::msg::CostmapMetaData metadata_;
+  std::vector<uint8_t> data_;
+
+  inline void wrap_index(int &x, int &y) const {
+    x = x % e_dim_;
+    if (x < 0) x += e_dim_;
+    y = y % z_dim_;
+    if (y < 0) y += z_dim_;
+  }
+
+ public:
+  Costmap3D(const int res);
   Costmap3D();
+  ~Costmap3D() = default;
 
-  /**
-   * @brief Update the costmap based on the robot's pose.
-   * @param drone_pose Current robot pose in map frame.
-   * @return True if update succeeded, false otherwise.
-   */
-  bool updateCostmap(const geometry_msgs::msg::PoseStamped & drone_pose);
+  inline int z_dim() { return z_dim_; }
+  inline int e_dim() { return e_dim_; }
 
-  /**
-   * @brief Get the TF frame of the costmap's map.
-   * @return Name of the map frame.
-   */
+  inline float get_weight(int x, int y) const {
+    wrap_index(x, y);
+    return weight_(x, y);
+  }
+
+  inline bool path_available(int x, int y) const {
+    return weight_(x, y) < 0.001;
+  }
+
+  inline void set_weight(int x, int y, float value) { weight_(x, y) = value; }
+  inline void add_weight(int x, int y, float value) { weight_(x, y) += value; }
+
+  void upsample();
+  void downsample();
+  void set_zero();
+  bool is_empty() const;
+  void go_binary(float theta_low, float theta_high);
+
+  bool updateCostmap(const geometry_msgs::msg::PoseStamped & robot_pose);
   std::string getMapFrame() const;
-
-  /**
-   * @brief Retrieve the costmap metadata.
-   * @return A CostmapMetaData message containing resolution, size, origin, etc.
-   */
   nav2_drone_msgs::msg::CostmapMetaData getMetadata() const;
-
-  /**
-   * @brief Retrieve the raw cost data as bytes (0–255).
-   * @return Vector of uint8_t values representing cost.
-   */
   std::vector<uint8_t> getData() const;
-
-  /**
-   * @brief Retrieve the cost data as floats for publishing.
-   * Converts each byte value to float.
-   * @return Vector of float values representing cost.
-   */
   std::vector<float> getDataFloat() const;
-
-private:
-  nav2_drone_msgs::msg::CostmapMetaData metadata_;  ///< Costmap metadata
-  std::vector<uint8_t> data_;                     ///< Flattened 3D cost data
 };
 
 }  // namespace nav2_drone_costmap_3d
