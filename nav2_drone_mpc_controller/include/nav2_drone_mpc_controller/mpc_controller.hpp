@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <dlib/matrix.h>
+#include <dlib/control.h>
+#include <octomap/octomap.h>
 
 #include "rclcpp/rclcpp.hpp"
 #include "nav2_drone_core/controller.hpp"
@@ -16,11 +19,8 @@
 #include "nav2_drone_costmap_3d/costmap_publisher.hpp"
 #include "nav2_drone_mpc_controller/histogram.hpp"
 
-#include <dlib/matrix.h>
-#include <dlib/control.h>
-#include <octomap/octomap.h>
-
-namespace nav2_drone_mpc_controller {
+namespace nav2_drone_mpc_controller
+{
 
 // MPC template parameters
 static constexpr unsigned int STATES = 6;
@@ -40,19 +40,16 @@ public:
   void configure(
     rclcpp::Node::SharedPtr node,
     const std::string & name,
-    const std::shared_ptr<tf2_ros::Buffer> & tf,
-    const CostmapPublisherPtr & costmap) override;
+    const std::shared_ptr<nav2_drone_costmap_3d::LayeredCostmap3D> & costmap) override;
+    void setPath(const nav_msgs::msg::Path & path) override;
 
-  void setPath(const nav_msgs::msg::Path & path) override;
+    geometry_msgs::msg::TwistStamped computeVelocityCommands(
+      const geometry_msgs::msg::PoseStamped & pose,
+      const geometry_msgs::msg::Twist & speed) override;
 
-  geometry_msgs::msg::TwistStamped computeVelocityCommands(
-    const geometry_msgs::msg::PoseStamped & pose,
-    const geometry_msgs::msg::Twist & speed) override;
+    bool isGoalReached(const geometry_msgs::msg::PoseStamped & pose);
 
-  bool isGoalReached(
-    const geometry_msgs::msg::PoseStamped & pose) override;
-
-  void updateMap(const CostmapPublisherPtr & costmap) override;
+    void updateMap(const std::shared_ptr<nav2_drone_costmap_3d::LayeredCostmap3D> & costmap) override;
 
 private:
   rclcpp::Node::SharedPtr node_;
@@ -87,14 +84,36 @@ private:
 
   // Helpers
   double getLookAheadDistance(const geometry_msgs::msg::Twist & speed) const;
-  std::pair<int,int> get_ez_grid_pos(const octomap::point3d & goal) const;
-  std::pair<double,double> get_ez(
+  std::pair<int, int> get_ez_grid_pos(const octomap::point3d & goal) const;
+  std::pair<double, double> get_ez(
     const geometry_msgs::msg::PoseStamped & curr,
     const geometry_msgs::msg::PoseStamped & targ) const;
   geometry_msgs::msg::PoseStamped getLookAheadPoint(
     double lookahead_dist,
     const geometry_msgs::msg::PoseStamped & curr) const;
 };
+
+// Inline implementation of getLookAheadPoint
+// inline geometry_msgs::msg::PoseStamped MPCController::getLookAheadPoint(
+//   double lookahead_dist,
+//   const geometry_msgs::msg::PoseStamped & curr) const
+// {
+//   geometry_msgs::msg::PoseStamped lookahead_point = curr;
+
+//   // Extract yaw from quaternion
+//   double siny_cosp = 2.0 * (curr.pose.orientation.w * curr.pose.orientation.z +
+//                             curr.pose.orientation.x * curr.pose.orientation.y);
+//   double cosy_cosp = 1.0 - 2.0 * (curr.pose.orientation.y * curr.pose.orientation.y +
+//                                   curr.pose.orientation.z * curr.pose.orientation.z);
+//   double yaw = std::atan2(siny_cosp, cosy_cosp);
+
+//   // Compute lookahead point in the direction of yaw
+//   lookahead_point.pose.position.x += lookahead_dist * std::cos(yaw);
+//   lookahead_point.pose.position.y += lookahead_dist * std::sin(yaw);
+
+//   // Z remains unchanged (assuming planar lookahead)
+//   return lookahead_point;
+// }
 
 }  // namespace nav2_drone_mpc_controller
 

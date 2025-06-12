@@ -2,6 +2,7 @@
 #define NAV2_DRONE_UTIL__NODE_UTILS_HPP_
 
 #include <string>
+#include <cmath>
 #include "rclcpp/rclcpp.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
 
@@ -62,6 +63,36 @@ inline std::string get_plugin_type_param(
   std::string plugin_type;
   node->get_parameter(name, plugin_type);
   return plugin_type;
+}
+
+/**
+ * @brief Convert radians to degrees.
+ *
+ * @param rad Angle in radians
+ * @return Angle in degrees
+ */
+inline double rad_to_deg(double rad)
+{
+  return rad * (180.0 / M_PI);
+}
+
+/**
+ * @brief Convert degrees to radians.
+ *
+ * @param deg Angle in degrees
+ * @return Angle in radians
+ */
+inline double deg_to_rad(double deg)
+{
+  return deg * (M_PI / 180.0);
+}
+
+inline double getDiff2Angles(double angle1, double angle2)
+{
+  double diff = angle2 - angle1;
+  while (diff > M_PI) diff -= 2.0 * M_PI;
+  while (diff < -M_PI) diff += 2.0 * M_PI;
+  return diff;
 }
 
 }  // namespace nav2_drone_util

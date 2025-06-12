@@ -20,6 +20,7 @@ find_package(nav_msgs REQUIRED)
 find_package(octomap_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(nav2_drone_msgs REQUIRED)
+
 # Source files (explicitly list to avoid building stale examples)
 set(SOURCE_FILES
   src/layered_costmap_3d.cpp
@@ -87,6 +88,7 @@ ament_export_dependencies(
   pluginlib
   nav_msgs
   nav2_drone_msgs
+  octomap_msgs
 )
 
 ament_package()

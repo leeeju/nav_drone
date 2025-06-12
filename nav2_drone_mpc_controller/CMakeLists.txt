@@ -18,7 +18,7 @@ find_package(pluginlib REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(nav2_drone_costmap_3d REQUIRED)
 find_package(octomap REQUIRED)
-
+find_package(octomap_msgs REQUIRED)
 
 set(dependencies
   rclcpp
@@ -27,6 +27,7 @@ set(dependencies
   pluginlib
   nav2_drone_costmap_3d
   octomap
+  octomap_msgs
 )
 
 # -------------------------------------------------------------------
@@ -63,6 +64,7 @@ ament_target_dependencies(histogram_lib
   nav2_drone_core
   nav2_drone_costmap_3d
   octomap
+  octomap_msgs
 )
 target_link_libraries(histogram_lib
   Eigen3::Eigen

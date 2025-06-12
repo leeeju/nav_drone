@@ -46,10 +46,10 @@ public:
     double robot_x,
     double robot_y,
     double robot_yaw,
-    double & min_x,
-    double & min_y,
-    double & max_x,
-    double & max_y) override;
+    double* min_x,
+    double* min_y,
+    double* max_x,
+    double* max_y) override;
 
   /**
    * @brief Populate the master costmap based on this layer's data
