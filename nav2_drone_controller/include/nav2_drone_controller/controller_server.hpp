@@ -33,12 +33,6 @@
 
 #include "nav2_drone_costmap_3d/costmap_publisher.hpp"
 
-#include "nav2_drone_msgs/action/follow_path.hpp"
-#include "nav2_drone_util/node_utils.hpp"
-#include "nav2_drone_util/node_thread.hpp"
-#include "nav2_drone_util/drone_utils.hpp"
-#include "nav2_drone_util/visibility_control.h"
-#include "nav2_drone_util/tf_help.hpp"
 
 #include <pluginlib/class_list_macros.hpp>
 #include <pluginlib/class_loader.hpp>
