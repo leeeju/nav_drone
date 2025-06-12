@@ -20,8 +20,12 @@ find_package(nav_msgs REQUIRED)
 find_package(octomap_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 
-# Source files
-file(GLOB_RECURSE SOURCE_FILES src/*.cpp)
+# Source files (explicitly list to avoid building stale examples)
+set(SOURCE_FILES
+  src/layered_costmap_3d.cpp
+  src/costmap_publisher.cpp
+  src/octomap_wrapper.cpp
+)
 
 # Create library
 add_library(${PROJECT_NAME} SHARED
