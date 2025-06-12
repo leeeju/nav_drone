@@ -13,17 +13,26 @@
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "nav_msgs/msg/path.hpp"
-#include "nav2_drone_costmap_3d/costmap_server.hpp"
+#include "nav2_drone_costmap_3d/costmap_publisher.hpp"
 #include "nav2_drone_mpc_controller/histogram.hpp"
 
 #include <dlib/matrix.h>
+#include <dlib/control.h>
+#include <octomap/octomap.h>
 
 namespace nav2_drone_mpc_controller {
+
+// MPC template parameters
+static constexpr unsigned int STATES = 6;
+static constexpr unsigned int CONTROLS = 3;
+static constexpr unsigned int HORIZON = 30;
+// Histogram resolution in degrees
+static constexpr double ALPHA_RES = 5.0;
 
 class MPCController : public nav2_drone_core::Controller
 {
 public:
-  using Costmap3DServerPtr = std::shared_ptr<nav2_drone_costmap_3d::CostmapServer>;
+  using CostmapPublisherPtr = std::shared_ptr<nav2_drone_costmap_3d::CostmapPublisher>;
 
   MPCController() = default;
   ~MPCController() override = default;
@@ -32,7 +41,7 @@ public:
     rclcpp::Node::SharedPtr node,
     const std::string & name,
     const std::shared_ptr<tf2_ros::Buffer> & tf,
-    const Costmap3DServerPtr & costmap) override;
+    const CostmapPublisherPtr & costmap) override;
 
   void setPath(const nav_msgs::msg::Path & path) override;
 
@@ -43,7 +52,7 @@ public:
   bool isGoalReached(
     const geometry_msgs::msg::PoseStamped & pose) override;
 
-  void updateMap(const Costmap3DServerPtr & costmap) override;
+  void updateMap(const CostmapPublisherPtr & costmap) override;
 
 private:
   rclcpp::Node::SharedPtr node_;
@@ -51,7 +60,7 @@ private:
   rclcpp::Logger logger_;
   rclcpp::Clock::SharedPtr clock_;
   std::shared_ptr<tf2_ros::Buffer> tf_;
-  Costmap3DServerPtr costmap_;
+  CostmapPublisherPtr costmap_;
   nav_msgs::msg::Path global_plan_;
 
   // MPC internals

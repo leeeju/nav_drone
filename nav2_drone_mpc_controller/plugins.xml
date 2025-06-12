@@ -4,7 +4,7 @@
     <class
       name="nav2_drone_mpc_controller/MPCController"
       type="nav2_drone_mpc_controller::MPCController"
-      base_class_type="nav2_core::Controller">
+      base_class_type="nav2_drone_core::Controller">
       <description>Model Predictive Controller for drone waypoint tracking</description>
     </class>
   </library>

@@ -27,6 +27,9 @@ class CostmapPublisher : public rclcpp::Node
 public:
   explicit CostmapPublisher(const rclcpp::NodeOptions & options);
 
+  /// Get the underlying Octomap tree if available
+  std::shared_ptr<octomap::OcTree> get_octree() const { return octree_; }
+
 private:
   // Parameters
   double lookahead_dist_;

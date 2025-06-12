@@ -12,6 +12,7 @@
 #include "nav2_drone_util/node_utils.hpp"
 #include "nav2_drone_util/angle_utils.hpp"
 #include "nav2_drone_util/drone_utils.hpp"
+#include "nav2_drone_util/geometry_utils.hpp"
 
 #include "pluginlib/class_list_macros.hpp"
 
@@ -27,8 +28,9 @@ namespace nav2_drone_mpc_controller
 //  ~MPCController() override = default;
 
 void MPCController::configure(const rclcpp::Node::SharedPtr node,
-                              std::string name, std::shared_ptr<tf2_ros::Buffer> tf,
-                              std::shared_ptr<octomap::OcTree> costmap )
+                              const std::string & name,
+                              const std::shared_ptr<tf2_ros::Buffer> & tf,
+                              const std::shared_ptr<nav2_drone_costmap_3d::CostmapPublisher> & costmap)
 {
   node_ = node;
 
@@ -154,7 +156,7 @@ void MPCController::setPath(const nav_msgs::msg::Path & path)
   global_plan_ = path;
 }
 
-void MPCController::updateMap(std::shared_ptr<octomap::OcTree> costmap)
+void MPCController::updateMap(const std::shared_ptr<nav2_drone_costmap_3d::CostmapPublisher> & costmap)
 {
   costmap_ = costmap;
 }
@@ -200,9 +202,19 @@ geometry_msgs::msg::TwistStamped MPCController::computeVelocityCommands(
 
 }
 
+bool MPCController::isGoalReached(const geometry_msgs::msg::PoseStamped & pose)
+{
+  if (global_plan_.poses.empty()) {
+    return true;
+  }
+  const auto & goal = global_plan_.poses.back();
+  double dist = nav2_drone_util::euclidean_distance(pose, goal, true);
+  return dist < 0.5;
+}
+
 
 double MPCController::getLookAheadDistance(
-  const geometry_msgs::msg::Twist & speed)
+  const geometry_msgs::msg::Twist & speed) const
 {
   // If using velocity-scaled look ahead distances, find and clamp the dist
   // Else, use the static look ahead distance
@@ -320,21 +332,27 @@ geometry_msgs::msg::PoseStamped MPCController::getLookAheadPoint(
   histogram.set_zero();
 //  RCLCPP_INFO(logger_, "Two - Four - One");
 
-  if(costmap_ == nullptr){
-    RCLCPP_ERROR(logger_, "Costmap is null.  Did you provide an updated map? ");
+  if (!costmap_) {
+    RCLCPP_ERROR(logger_, "Costmap publisher is null.  Did you provide an updated map?");
     return *goal_pose_it;
   }
 
-  for(octomap::OcTree::leaf_bbx_iterator it = costmap_->begin_leafs_bbx(min,max),
-    end=costmap_->end_leafs_bbx(); it!= end; ++it) {
+  auto tree = costmap_->get_octree();
+  if (!tree) {
+    RCLCPP_ERROR(logger_, "Octomap data missing in costmap publisher");
+    return *goal_pose_it;
+  }
+
+  for(octomap::OcTree::leaf_bbx_iterator it = tree->begin_leafs_bbx(min,max),
+    end = tree->end_leafs_bbx(); it!= end; ++it) {
 
     octomap::point3d end_point(it.getCoordinate());
     double distance = start_point.distance(end_point);
-    double l = distance - (robot_radius_ + safety_radius_ + costmap_->getResolution());
+    double l = distance - (robot_radius_ + safety_radius_ + tree->getResolution());
     if ( (distance <= bounding_box_radius) && (l > 0.001) )  {   // Work in the drone radius, to minimuse calculation.
       // The point is within a sphere around the drone, thus an active cell
       std::pair<int, int> coords = get_ez_grid_pos(end_point);   // NOTE this point is in the base_link frame.  Remember when translating to the lookahead point
-      int lamda = floor(nav2_drone_util::rad_to_deg( asin((robot_radius_ + safety_radius_ + costmap_->getResolution()) / distance) / ALPHA_RES));
+      int lamda = floor(nav2_drone_util::rad_to_deg( asin((robot_radius_ + safety_radius_ + tree->getResolution()) / distance) / ALPHA_RES));
 
       double weight = pow( it->getOccupancy(), 2) * (const_a - (const_b * l));
 
