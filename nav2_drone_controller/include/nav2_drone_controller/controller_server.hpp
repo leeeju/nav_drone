@@ -28,7 +28,7 @@
 #include "nav2_drone_core/progress_checker.hpp"
 #include "nav2_drone_core/goal_checker.hpp"
 
-#include "nav2_drone_costmap_3d/costmap_server.hpp"
+#include "nav2_drone_costmap_3d/costmap_publisher.hpp"
 
 #include "nav2_drone_msgs/action/follow_path.hpp"
 #include "nav2_drone_util/node_utils.hpp"
