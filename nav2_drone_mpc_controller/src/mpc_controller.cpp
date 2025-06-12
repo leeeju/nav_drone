@@ -26,14 +26,10 @@ namespace nav2_drone_mpc_controller
 
 void MPCController::configure(
 
-  const rclcpp_lifecycle::LifecycleNode::SharedPtr & node,
+  rclcpp::Node::SharedPtr node,
   const std::string & name,
-  const std::shared_ptr<tf2_ros::Buffer> & tf,
   const std::shared_ptr<nav2_drone_costmap_3d::LayeredCostmap3D> & costmap)
-
 {
-
-  rclcpp_lifecycle::LifecycleNode::ConstSharedPtr node_;
   std::string plugin_name_;
   std::shared_ptr<tf2_ros::Buffer> tf_;
   std::shared_ptr<nav2_drone_costmap_3d::LayeredCostmap3D> costmap_;
@@ -156,10 +152,11 @@ void MPCController::setPath(const nav_msgs::msg::Path & path)
   global_plan_ = path;
 }
 
-void MPCController::updateMap(const std::shared_ptr<nav2_drone_costmap_3d::CostmapPublisher> & costmap)
+void MPCController::updateMap(const std::shared_ptr<nav2_drone_costmap_3d::LayeredCostmap3D> & costmap)
 {
-  costmap_ = costmap;
+  costmap_ = costmap; // costmap.get() 대신 costmap 자체를 대입
 }
+
 
 
 geometry_msgs::msg::TwistStamped MPCController::computeVelocityCommands(
@@ -354,11 +351,7 @@ geometry_msgs::msg::PoseStamped MPCController::getLookAheadPoint(
     return *goal_pose_it;
   }
 
-  auto tree = costmap_->get_octree();
-  if (!tree) {
-    RCLCPP_ERROR(logger_, "Octomap data missing in costmap publisher");
-    return *goal_pose_it;
-  }
+  auto& master_costmap = costmap_->getMasterCostmap();
 
   for(octomap::OcTree::leaf_bbx_iterator it = tree->begin_leafs_bbx(min,max),
     end = tree->end_leafs_bbx(); it!= end; ++it) {

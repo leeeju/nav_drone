@@ -57,7 +57,8 @@ private:
   rclcpp::Logger logger_;
   rclcpp::Clock::SharedPtr clock_;
   std::shared_ptr<tf2_ros::Buffer> tf_;
-  CostmapPublisherPtr costmap_;
+  // CostmapPublisherPtr costmap_; // 원래 선언
+  std::shared_ptr<nav2_drone_costmap_3d::LayeredCostmap3D> costmap_; // <-- 수정된 선언
   nav_msgs::msg::Path global_plan_;
 
   // MPC internals
