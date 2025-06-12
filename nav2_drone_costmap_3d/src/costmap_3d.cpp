@@ -1,53 +1,76 @@
 #include "nav2_drone_costmap_3d/costmap_3d.hpp"
-#include <rclcpp/rclcpp.hpp>
 
-namespace nav2_drone_costmap_3d {
+using namespace nav2_drone_costmap_3d;
 
-Costmap3D::Costmap3D()
-: metadata_(),
-  data_()
+LayeredCostmap3D::LayeredCostmap3D()
 {
-  // 기본 생성자: metadata_와 data_를 기본값으로 초기화
+  // Constructor: initialize octomap and layer structures
 }
 
-bool Costmap3D::updateCostmap(const geometry_msgs::msg::PoseStamped & robot_pose)
+void LayeredCostmap3D::updateFromOctomap(const octomap_msgs::msg::Octomap & octo_msg)
 {
-  // 로봇의 현재 포즈를 메타데이터 헤더에 반영
-  metadata_.header = robot_pose.header;
-
-  // TODO: octo_tree_ 또는 외부 데이터로부터 costmap data_ 갱신 로직 구현
-  // 예: data_.assign(...) 또는 외부 API 호출
-
-  return true;
+  std::lock_guard<std::mutex> lock(mutex_);
+  // Convert and integrate octo_msg into internal layers
 }
 
-std::string Costmap3D::getMapFrame() const
+void LayeredCostmap3D::addPlugin(const std::shared_ptr<rclcpp::Node> & node)
 {
-  // 메타데이터 헤더의 frame_id 반환
-  return metadata_.header.frame_id;
+  // Optionally register this costmap with a broader framework
 }
 
-nav2_drone_msgs::msg::CostmapMetaData Costmap3D::getMetadata() const
+CostmapPublisher::CostmapPublisher(const rclcpp::NodeOptions & options)
+: Node("costmap_publisher_3d", options)
 {
-  // 현재 메타데이터 반환
-  return metadata_;
+  // Declare and get parameters
+  this->declare_parameter("octomap_topic", std::string("/octomap_binary"));
+  this->declare_parameter("odom_topic", std::string("/odom"));
+  this->declare_parameter("publish_rate", 1.0);
+
+  this->get_parameter("octomap_topic", octomap_topic_);
+  this->get_parameter("odom_topic", odom_topic_);
+  this->get_parameter("publish_rate", publish_rate_);
+
+  // Initialize layered costmap
+  layered_costmap_ = std::make_shared<LayeredCostmap3D>();
+
+  // Subscribers
+  octomap_sub_ = this->create_subscription<octomap_msgs::msg::Octomap>(
+    octomap_topic_, 10,
+    std::bind(&CostmapPublisher::handleOctomap, this, std::placeholders::_1));
+  odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
+    odom_topic_, 10,
+    std::bind(&CostmapPublisher::handleOdometry, this, std::placeholders::_1));
+
+  // Timer
+  timer_ = this->create_wall_timer(
+    std::chrono::duration<double>(1.0 / publish_rate_),
+    std::bind(&CostmapPublisher::onTimer, this));
 }
 
-std::vector<uint8_t> Costmap3D::getData() const
+void CostmapPublisher::handleOctomap(const octomap_msgs::msg::Octomap::SharedPtr msg)
 {
-  // 원시 바이트 데이터 반환
-  return data_;
+  layered_costmap_->updateFromOctomap(*msg);
 }
 
-std::vector<float> Costmap3D::getDataFloat() const
+void CostmapPublisher::handleOdometry(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
-  // 바이트 데이터를 float 벡터로 변환하여 반환
-  std::vector<float> out;
-  out.reserve(data_.size());
-  for (uint8_t v : data_) {
-    out.push_back(static_cast<float>(v));
+  std::lock_guard<std::mutex> lock(mutex_);
+  // Update last known pose
+  last_pose_.header = msg->header;
+  last_pose_.pose = msg->pose.pose;
+  have_odom_ = true;
+}
+
+void CostmapPublisher::onTimer()
+{
+  if (!have_odom_) {
+    RCLCPP_WARN(this->get_logger(), "No odometry received yet");
+    return;
   }
-  return out;
-}
 
-}  // namespace nav2_drone_costmap_3d
+  // Publish or process the costmap based on layered_costmap_ and last_pose_
+  RCLCPP_INFO(this->get_logger(), "Publishing 3D costmap at pose (%.2f, %.2f, %.2f)",
+    last_pose_.pose.position.x,
+    last_pose_.pose.position.y,
+    last_pose_.pose.position.z);
+}

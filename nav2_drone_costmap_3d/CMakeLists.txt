@@ -18,7 +18,7 @@ find_package(nav2_core REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(octomap_msgs REQUIRED)
-find_package(nav2_drone_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 
 # Source files
 file(GLOB_RECURSE SOURCE_FILES src/*.cpp)
@@ -43,7 +43,7 @@ ament_target_dependencies(${PROJECT_NAME}
   pluginlib
   nav_msgs
   octomap_msgs
-  nav2_drone_msgs
+  nav_msgs
 )
 
 # Export plugin if present

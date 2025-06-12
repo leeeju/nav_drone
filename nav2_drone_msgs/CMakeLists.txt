@@ -11,7 +11,6 @@ find_package(nav_msgs           REQUIRED)
 find_package(action_msgs        REQUIRED)
 find_package(geographic_msgs    REQUIRED)
 
-# 2) 메시지/서비스/액션 정의
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/BehaviorTreeLog.msg"
   "msg/BehaviorTreeStatusChange.msg"
@@ -25,6 +24,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Particle.msg"
   "msg/ParticleCloud.msg"
   "msg/SpeedLimit.msg"
+  "msg/Odometry.msg"
   "srv/ClearCostmapArounddrone.srv"
   "srv/ClearCostmapExceptRegion.srv"
   "srv/ClearEntireCostmap.srv"
@@ -55,10 +55,14 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     nav_msgs
     action_msgs
     geographic_msgs
+    geometry_msgs
 )
 
-# 3) 런타임 의존성 export
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+
 ament_export_dependencies(rosidl_default_runtime)
 
-# 4) ament 패키지 매크로
 ament_package()

@@ -1,69 +1,64 @@
 #ifndef NAV2_DRONE_COSTMAP_3D_COSTMAP_3D_HPP_
 #define NAV2_DRONE_COSTMAP_3D_COSTMAP_3D_HPP_
 
-#pragma once
-
-#include <float.h>
-#include <math.h>
-#include <Eigen/Dense>
-#include <vector>
 #include <string>
-#include "nav2_drone_msgs/msg/costmap_meta_data.hpp"
-#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <memory>
+#include <vector>
+#include <mutex>
 
-namespace nav2_drone_costmap_3d {
+#include "rclcpp/rclcpp.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "octomap_msgs/msg/octomap.hpp"
+#include "nav2_drone_costmap_3d/costmap_3d.hpp"
 
-const int ALPHA_RES = 6;
-const int GRID_LENGTH_Z = 360 / ALPHA_RES;
-const int GRID_LENGTH_E = 180 / ALPHA_RES;
+namespace nav2_drone_costmap_3d
+{
 
-class Costmap3D {
-  int resolution_;
-  int z_dim_;
-  int e_dim_;
-  Eigen::MatrixXf weight_;
+class LayeredCostmap3D
+{
+public:
+  LayeredCostmap3D();
+  void updateFromOctomap(const octomap_msgs::msg::Octomap & octo_msg);
+  void addPlugin(const std::shared_ptr<rclcpp::Node> & node);
+  // ... other plugin management methods ...
 
-  nav2_drone_msgs::msg::CostmapMetaData metadata_;
-  std::vector<uint8_t> data_;
+private:
+  std::mutex mutex_;
+  // octomap storage, costmap layers, etc.
+};
 
-  inline void wrap_index(int &x, int &y) const {
-    x = x % e_dim_;
-    if (x < 0) x += e_dim_;
-    y = y % z_dim_;
-    if (y < 0) y += z_dim_;
-  }
+class CostmapPublisher : public rclcpp::Node
+{
+public:
+  explicit CostmapPublisher(const rclcpp::NodeOptions & options);
+  ~CostmapPublisher() override = default;
 
- public:
-  Costmap3D(const int res);
-  Costmap3D();
-  ~Costmap3D() = default;
+private:
+  // Subscribers & timers
+  rclcpp::Subscription<octomap_msgs::msg::Octomap>::SharedPtr octomap_sub_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+  rclcpp::TimerBase::SharedPtr timer_;
 
-  inline int z_dim() { return z_dim_; }
-  inline int e_dim() { return e_dim_; }
+  // Parameters
+  std::string octomap_topic_;
+  std::string odom_topic_;
+  double publish_rate_;
 
-  inline float get_weight(int x, int y) const {
-    wrap_index(x, y);
-    return weight_(x, y);
-  }
+  // State
+  std::mutex mutex_;
+  geometry_msgs::msg::PoseStamped last_pose_;
+  bool have_odom_{false};
 
-  inline bool path_available(int x, int y) const {
-    return weight_(x, y) < 0.001;
-  }
+  // Costmap
+  std::shared_ptr<LayeredCostmap3D> layered_costmap_;
 
-  inline void set_weight(int x, int y, float value) { weight_(x, y) = value; }
-  inline void add_weight(int x, int y, float value) { weight_(x, y) += value; }
-
-  void upsample();
-  void downsample();
-  void set_zero();
-  bool is_empty() const;
-  void go_binary(float theta_low, float theta_high);
-
-  bool updateCostmap(const geometry_msgs::msg::PoseStamped & robot_pose);
-  std::string getMapFrame() const;
-  nav2_drone_msgs::msg::CostmapMetaData getMetadata() const;
-  std::vector<uint8_t> getData() const;
-  std::vector<float> getDataFloat() const;
+  // Callbacks
+  void handleOctomap(const octomap_msgs::msg::Octomap::SharedPtr msg);
+  void handleOdometry(const nav_msgs::msg::Odometry::SharedPtr msg);
+  void onTimer();
 };
 
 }  // namespace nav2_drone_costmap_3d
+
+#endif  // NAV2_DRONE_COSTMAP_3D_COSTMAP_3D_HPP_
