@@ -1,5 +1,5 @@
-#include <math.h>     // fabs
-#include <algorithm>  // std::clamp (C++ 17), find_if
+#include <math.h>
+#include <algorithm>
 #include <string>
 #include <limits>
 #include <memory>

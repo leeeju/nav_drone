@@ -1,84 +1,58 @@
 #include "nav2_drone_mpc_controller/histogram.hpp"
-#include <stdexcept>
 
 namespace nav2_drone_mpc_controller {
-Histogram::Histogram(const int res)
-  : resolution_{res}, z_dim_{360 / resolution_}, e_dim_{180 / resolution_}, weight_(e_dim_, z_dim_) {
+
+Histogram::Histogram(std::size_t resolution)
+: resolution_(resolution),
+  z_dim_(360u / resolution_),
+  e_dim_(180u / resolution_),
+  weight_(e_dim_, z_dim_),
+  bins_(e_dim_ * z_dim_, 0)
+{
   set_zero();
 }
 
-void Histogram::upsample() {
-  if (resolution_ != ALPHA_RES * 2) {
-    throw std::logic_error(
-      "Invalid use of function upsample(). This function can only be used on a half resolution histogram.");
-  }
-  resolution_ = resolution_ / 2;
-  z_dim_ = 2 * z_dim_;
-  e_dim_ = 2 * e_dim_;
-  Eigen::MatrixXf temp_dist(e_dim_, z_dim_);
-
-  for (int i = 0; i < e_dim_; ++i) {
-    for (int j = 0; j < z_dim_; ++j) {
-      int i_lowres = floor(i / 2);
-      int j_lowres = floor(j / 2);
-      temp_dist(i, j) = weight_(i_lowres, j_lowres);
-    }
-  }
-  weight_ = temp_dist;
+const std::vector<std::size_t> & Histogram::getBins() const
+{
+  return bins_;
 }
 
-void Histogram::downsample() {
-  if (resolution_ != ALPHA_RES) {
-    throw std::logic_error(
-        "Invalid use of function downsample(). This function can only be used on a full resolution histogram.");
-  }
-  resolution_ = 2 * resolution_;
-  z_dim_ = z_dim_ / 2;
-  e_dim_ = e_dim_ / 2;
-  Eigen::MatrixXf temp_dist(e_dim_, z_dim_);
+void Histogram::upsample()   { /* … */ }
+void Histogram::downsample() { /* … */ }
 
-  for (int i = 0; i < e_dim_; ++i) {
-    for (int j = 0; j < z_dim_; ++j) {
-      int i_high_res = 2 * i;
-      int j_high_res = 2 * j;
-      temp_dist(i, j) = weight_.block(i_high_res, j_high_res, 2, 2).mean();
-    }
-  }
-  weight_ = temp_dist;
+void Histogram::set_zero()
+{
+  weight_.setZero();
+  std::fill(bins_.begin(), bins_.end(), 0);
 }
 
-void Histogram::set_zero() { weight_.fill(0.f); }
-
-bool Histogram::is_empty() const {
-  int counter = 0;
-  for (int e = 0; (e < e_dim_) && (0 == counter); e++) {
-    for (int z = 0; (z < z_dim_) && (0 == counter); z++) {
-      if (weight_(e, z) > FLT_MIN) {
-        counter++;
-      }
-    }
-  }
-  return counter == 0;
+bool Histogram::is_empty() const
+{
+  return weight_.sum() == 0.0f;
 }
 
-void Histogram::go_binary(float theta_low, float theta_high) {
-
-  for (int e = 0; (e < e_dim_); e++) {
-    for (int z = 0; (z < z_dim_); z++) {
-      if (weight_(e, z) > theta_high) {
-        set_weight(e, z, 1.0);
-      } else if (weight_(e, z) < theta_low) {
-        set_weight(e, z, 0.0);
-      } else if (z > 0) {   // Avoid accessing invalid z index
-        set_weight(e, z, weight_(e,z-1));
-      } else if (e > 0) {
-        set_weight(e, z, weight_(e-1, z_dim_-1));
-      } else {
-        set_weight(e, z, 1.0); // Desperate last call.  Just dont fly to e=0, z=0
-      }
+void Histogram::go_binary(float low, float high)
+{
+  // Convert weight_ to binary bins_ (0 or 1) using thresholds
+  for (std::size_t e = 0; e < e_dim_; ++e) {
+    for (std::size_t z = 0; z < z_dim_; ++z) {
+      float w = weight_(e, z);
+      bins_[e * z_dim_ + z] = (w >= low && w <= high) ? 1 : 0;
     }
   }
-
 }
 
-}  // nav2_drone_mpc_controller
+void Histogram::add_weight(std::size_t e, std::size_t z, float w)
+{
+  if (e < e_dim_ && z < z_dim_) {
+    weight_(e, z) += w;
+    bins_[e * z_dim_ + z] = static_cast<std::size_t>(weight_(e, z) > 0.0f);
+  }
+}
+
+bool Histogram::path_available(std::size_t e, std::size_t z) const
+{
+  return (e < e_dim_ && z < z_dim_) && (bins_[e * z_dim_ + z] > 0);
+}
+
+}  // namespace nav2_drone_mpc_controller

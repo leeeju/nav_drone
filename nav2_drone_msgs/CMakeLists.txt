@@ -6,7 +6,7 @@ find_package(rosidl_default_generators REQUIRED)
 
 find_package(std_msgs            REQUIRED)
 find_package(builtin_interfaces REQUIRED)
-find_package(geometry_msgs      REQUIRED)
+# find_package(geometry_msgs      REQUIRED)
 find_package(nav_msgs           REQUIRED)
 find_package(action_msgs        REQUIRED)
 find_package(geographic_msgs    REQUIRED)
@@ -24,7 +24,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Particle.msg"
   "msg/ParticleCloud.msg"
   "msg/SpeedLimit.msg"
-  "msg/Odometry.msg"
+  # "msg/Odometry.msg"
   "srv/ClearCostmapArounddrone.srv"
   "srv/ClearCostmapExceptRegion.srv"
   "srv/ClearEntireCostmap.srv"
@@ -55,12 +55,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     nav_msgs
     action_msgs
     geographic_msgs
-    geometry_msgs
-)
-
-install(
-  DIRECTORY include/
-  DESTINATION include
 )
 
 ament_export_dependencies(rosidl_default_runtime)
